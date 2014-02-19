@@ -1,17 +1,19 @@
-teabag
+TeaBag
 ======
 
-Centrally Orchestrated Multi Node Log-Based Storage with Distributed Conflict Resolution
+Centrally Orchestrated Multi Node Log-Based Storage with Distributed Conflict 
+Resolution
 
-Multi node storage with built-in conflict resolution and event propagation. 
-Node values are computed on the log of mutations propagated across the network. 
-Read are always local (delayed if the value was never found). 
-A central authority serve as rendez-vous to retrieve the mount table for each a 
-given path.
+TeaBag is a log-based multi node storage based on the principle of event
+propagation and oplog pruning. Operations are pushed to the storage and conflict
+resolution is delegated to the client. Conflict resolution is done by retrieving
+the different log histories and replaying it a merged version.
 
-A user has a mount table which associates path to node lists. If the system is
-accessed from an untrusted machine all operations should happen in memory.
-Each machine 
+Read are always first attempted local (delayed if the data was enver retrieved).
+A central authority server serves as rendez-vous to retrieve the mount table and
+the different nodes for each root path. 
+
+Client library only stores data in memory. Tokens have an expiry date.
 
 - Small amount of data. Holds in memory.
 - Log based with history replay and distributed reconciliation
@@ -20,49 +22,64 @@ Each machine
 - Notifications when pathes are modified (local and remote)
 - Temporary keys { node, end_time, signature }, Revocations
 
-Log computation are based on simple functions that must be installed on the
-full nodes. The nodes only accept the types of storage it knows of, that is, the
-ones it has a conflict resolution function for.
-
-All calls to the nodes are signed by the user and can be tracked.
+All calls to the nodes are trackable thanks to the token attached with it.
 
 ```
 teabag_srv:
 -----------
 
-user -> { 
-  public_key, 
-  [ path -> [ str_url ] ],
-  [ token_revocations ]
+user_id -> { 
+  master_token,                   // hash(user_id, pwd)
+  [ root -> [ str_host ] ],     
+  [ tokens ]
 };
 
-GET  /public_key
 
-POST /token                        # returns challenge
-GET  /token/:challenge/:solution   # returns signed token to be signed
+/* ADMIN */
 
-GET  /table/:token
+// master_token
+PUT  /user/:user_id
+PUT  /user/:user_id/master_token/:master_token         // revoke all tokens
 
-POST /store
+/* PUBLIC */
+
+// token
+GET  /user/:user_id/token?master_token=X&end_date=Y    // broadcast token
+DEL  /user/:user_id/token/:token?master_token=X        // broadcast revocation
+
+// table
+PUT  /user/:user_id/table/:channel/:str_host?master_token=X 
+DEL  /user/:user_id/table/:channel/:str_host?master_token=X
+DEL  /user/:user_id/table/:channel?master_token=X
+GET  /user/:user_id/table?token=X
+
 ```
 
 ```
 teabag_str:
 -----------
 
-user -> {
-  public_key,
-  [ path ],
-  [ token_revocations ]
+user_id -> {
+  [ path, type -> { initial, [ op ], final, sha } ],
+  [ tokens ]
 }
+op := { payload, time }
+
+DEL /user/:user_id/token                               // revokes all tokens
+DEL /user/:user_id/token/:token
+
+POST /user/:user_id/oplog?token=X&path=Y&type=Z { [ op, sha ], value }
+GET  /user/:user_id/oplog?token=X&path=Y&type=Z
+GET  /user/:user_id/last?token=X&path=Y&type=Z         // returns value & last
+DEL  /user/:user_id/oplog?token=X&path=Y&type=Z&before=S
+GET  /user/:user_id/oplog/stream?token=X&path=Y
+
 ```
 
 ```
 teabag_cli:
 -----------
 
-{
-  public_key,
-  token
-}
+var cli = teabag_cli({ token });
+
 ```
