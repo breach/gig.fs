@@ -16,17 +16,16 @@ var http = require('http');
 var common = require('../lib/common.js');
 
 var app = express();
+var access = require('../lib/access.js').access({});
 
 var setup = function() {
   /* App Configuration */
   app.configure(function() {
     app.use(express.bodyParser());
     app.use(express.methodOverride());
-    //app.use(factory.access().verify);
-
+    app.use(access.verify);
     app.use(app.router);
-
-    //app.use(factory.access().error);
+    app.use(access.error);
   });
 
   //
@@ -35,7 +34,7 @@ var setup = function() {
 
   /* ADMIN */
   app.put( '/user/:user_id',                             require('./routes/admin.js').put_user);
-  app.put( '/user/:user_id/master_token/:master_token',  require('./routes/admin.js').put_master_token);
+  app.put( '/user/:user_id/master/:master',              require('./routes/admin.js').put_master);
 
   /* PUBLIC */
   app.get( '/user/:user_id/token',                       require('./routes/token.js').get_token);
@@ -49,12 +48,8 @@ var setup = function() {
 };
 
 
-// Manager
-var manager = require('./lib/manager.js').manager({});
-
-
 // INIT & START
-common.log.out('TeaBat: teabag_srv [Started]');
+common.log.out('TeaBag: teabag_srv [Started]');
 
 /* Setup */
 setup();

@@ -37,9 +37,9 @@ user_id -> {
 
 /* ADMIN */
 
-// master_token
+// master
 PUT  /user/:user_id
-PUT  /user/:user_id/master_token/:master_token         // revoke all tokens
+PUT  /user/:user_id/master/:master         // revoke all tokens
 
 /* PUBLIC */
 
@@ -52,6 +52,11 @@ PUT  /user/:user_id/table/:channel/:str_host?master_token=X
 DEL  /user/:user_id/table/:channel/:str_host?master_token=X
 DEL  /user/:user_id/table/:channel?master_token=X
 GET  /user/:user_id/table?token=X
+
+Storage:
+- user's master: $DATA/:salt/:user/master.json
+- user's tokens: $DATA/:salt/:user/tokens.json
+- user's table: $DATA/:salt/:user/table.json
 
 ```
 
@@ -74,6 +79,11 @@ GET  /user/:user_id/last?token=X&path=Y&type=Z         // returns value & last
 DEL  /user/:user_id/oplog?token=X&path=Y&type=Z&before=S
 GET  /user/:user_id/oplog/stream?token=X&path=Y
 
+Storage:
+- user's tokens: $DATA/:salt/:user/tokens.json
+- user's data: $DATA/:salt/:user/root/:type/...[path]...
+
+TODO: BLOB Storage
 ```
 
 ```
