@@ -1,0 +1,7 @@
+{
+  "name": "teabag_srv",
+  "version": "0.1.1",
+  "main": "./index.js",
+  "dependencies": {
+  }
+}
