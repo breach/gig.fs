@@ -54,9 +54,9 @@ DEL  /user/:user_id/table/:channel?master_token=X
 GET  /user/:user_id/table?token=X
 
 Storage:
-- user's master: $DATA/:salt/:user/master.json
-- user's tokens: $DATA/:salt/:user/tokens.json
-- user's table: $DATA/:salt/:user/table.json
+- user's master: $TEABAG_DATA/:salt/:user/master.json
+- user's tokens: $TEABAG_DATA/:salt/:user/tokens.json
+- user's table: $TEABAG_DATA/:salt/:user/table.json
 
 ```
 
@@ -80,8 +80,8 @@ DEL  /user/:user_id/oplog?token=X&path=Y&type=Z&before=S
 GET  /user/:user_id/oplog/stream?token=X&path=Y
 
 Storage:
-- user's tokens: $DATA/:salt/:user/tokens.json
-- user's data: $DATA/:salt/:user/root/:type/...[path]...
+- user's tokens: $TEABAG_DATA/:salt/:user/tokens.json
+- user's data: $TEABAG_DATA/:salt/:user/root/:type/...[path]...
 
 TODO: BLOB Storage
 ```
