@@ -30,7 +30,7 @@ All calls to the nodes are trackable thanks to the token attached with it.
 
 user_id -> { 
   master_token,                                        // hash(user_id, pwd)
-  [ channel -> [ { id, url } ] ],     
+  channel -> [ { id, url } ],     
   [ tokens ]
 };
 
@@ -43,15 +43,26 @@ PUT  /user/:user_id/master/:master                     // revoke all tokens
 /* PUBLIC */
 
 // token
-GET  /user/:user_id/token?master=X&end_date=Y    // broadcast token
-DEL  /user/:user_id/token/:token?master=X        // broadcast revocation
+GET  /user/:user_id/token
+     master, expire
+DEL  /user/:user_id/token/:token
+     master
+GET  /user/:user_id/token/:token/check
 
 // table
-POST /user/:user_id/table/:channel/store?master=X 
-DEL  /user/:user_id/table/:channel/store/:store_id?master=X
-GET  /user/:user_id/table/:channel/store/:store_id?master=X
-DEL  /user/:user_id/table/:channel?master_token=X
-GET  /user/:user_id/table?token=X
+POST /user/:user_id/table/:channel/store
+     master
+     { url, secret }
+DEL  /user/:user_id/table/:channel/store/:store_id
+     master
+GET  /user/:user_id/table/:channel/store/:store_id
+     master
+GET  /user/:user_id/table/:channel
+     master
+DEL  /user/:user_id/table/:channel
+     master
+GET  /user/:user_id/table
+     master
 
 Storage:
 - user's master: $TEABAG_DATA/:salt/:user/user.json
@@ -65,19 +76,30 @@ Storage:
 -------------
 
 user_id -> {
-  [ path, type -> { initial, [ op ], final, sha } ],
+  { path, type } -> { initial, [ op ], final, sha },
   [ tokens ]
 }
 op := { payload, time }
 
-DEL  /user/:user_id/token                                  // revokes all tokens
-DEL  /user/:user_id/token/:token
+BASE_URL = /user/:user_id
 
-POST /user/:user_id/oplog?token=X             { type, path, [ op, sha ], value }
-GET  /user/:user_id/oplog?token=X&path=Y&type=Z
-GET  /user/:user_id/last?token=X&path=Y&type=Z           // returns value & last
-DEL  /user/:user_id/oplog?token=X&path=Y&type=Z&before=S
-GET  /user/:user_id/oplog/stream?token=X&path=Y
+/* PUBLIC */
+
+// confirmation
+GET  {BASE_URL}/confirm
+     secret
+
+POST {BASE_URL}/oplog?token=X             
+     token
+     { type, path, [ op, sha ], value }
+GET  {BASE_URL}/oplog
+     token, path, type
+GET  {BASE_URL}/last                                    // returns value & last
+     token, path, type
+DEL  {BASE_URL}/oplog
+     token, path, type, before
+GET  {BASE_URL}/oplog/stream
+     token, path
 
 Storage:
 - user's tokens: $TEABAG_DATA/:salt/:user/tokens.json
