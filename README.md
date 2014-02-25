@@ -20,16 +20,16 @@ Client library only stores data in memory. Tokens have an expiry date.
 - Cache nodes [in-memory, disk] and Full nodes (read/write over net)
 - Writes get commited on network but optimistically accepted. Disconnected OK.
 - Notifications when pathes are modified (local and remote)
-- Temporary keys { node, end_time, signature }, Revocations
+- Temporary keys `{ node, end_time, signature }`, Revocations
 
 All calls to the nodes are trackable thanks to the token attached with it.
 
 ```
-teabag_srv: TeaBag Server
------------
+`teabag_srv`: TeaBag Server
+-------------
 
 user_id -> { 
-  master_token,                   // hash(user_id, pwd)
+  master_token,                                        // hash(user_id, pwd)
   [ channel -> [ { id, url } ] ],     
   [ tokens ]
 };
@@ -61,8 +61,8 @@ Storage:
 ```
 
 ```
-teabag_str: TeaBag Store
------------
+`teabag_str`: TeaBag Store
+-------------
 
 user_id -> {
   [ path, type -> { initial, [ op ], final, sha } ],
@@ -70,12 +70,12 @@ user_id -> {
 }
 op := { payload, time }
 
-DEL /user/:user_id/token                               // revokes all tokens
-DEL /user/:user_id/token/:token
+DEL  /user/:user_id/token                                  // revokes all tokens
+DEL  /user/:user_id/token/:token
 
-POST /user/:user_id/oplog?token=X&path=Y&type=Z { [ op, sha ], value }
+POST /user/:user_id/oplog?token=X             { type, path, [ op, sha ], value }
 GET  /user/:user_id/oplog?token=X&path=Y&type=Z
-GET  /user/:user_id/last?token=X&path=Y&type=Z         // returns value & last
+GET  /user/:user_id/last?token=X&path=Y&type=Z           // returns value & last
 DEL  /user/:user_id/oplog?token=X&path=Y&type=Z&before=S
 GET  /user/:user_id/oplog/stream?token=X&path=Y
 
@@ -87,8 +87,8 @@ TODO: BLOB Storage
 ```
 
 ```
-teabag_cli: TeaBag Client
------------
+`teabag_cli`: TeaBag Client
+-------------
 
 var cli = teabag_cli({ token });
 
