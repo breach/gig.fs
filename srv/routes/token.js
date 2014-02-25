@@ -8,11 +8,14 @@
  * @log:
  * - 2014-02-19 spolu  Creation
  */
+"use strict";
+
 var querystring = require('querystring');
-var common = require('../../lib/common.js');
 var util = require('util');
 var http = require('http');
 var async = require('async');
+var common = require('../../lib/common.js');
+var storage = require('../../lib/storage.js').storage({});
 
 /******************************************************************************/
 /*                               UTILITY METHODS                              */

@@ -25,12 +25,12 @@ Client library only stores data in memory. Tokens have an expiry date.
 All calls to the nodes are trackable thanks to the token attached with it.
 
 ```
-teabag_srv:
+teabag_srv: TeaBag Server
 -----------
 
 user_id -> { 
   master_token,                   // hash(user_id, pwd)
-  [ root -> [ str_host ] ],     
+  [ channel -> [ { id, url } ] ],     
   [ tokens ]
 };
 
@@ -38,30 +38,30 @@ user_id -> {
 /* ADMIN */
 
 // master
-PUT  /user/:user_id
-PUT  /user/:user_id/master/:master         // revoke all tokens
+PUT  /user/:user_id/master/:master                     // revoke all tokens
 
 /* PUBLIC */
 
 // token
-GET  /user/:user_id/token?master_token=X&end_date=Y    // broadcast token
-DEL  /user/:user_id/token/:token?master_token=X        // broadcast revocation
+GET  /user/:user_id/token?master=X&end_date=Y    // broadcast token
+DEL  /user/:user_id/token/:token?master=X        // broadcast revocation
 
 // table
-PUT  /user/:user_id/table/:channel/:str_host?master_token=X 
-DEL  /user/:user_id/table/:channel/:str_host?master_token=X
+POST /user/:user_id/table/:channel/store?master=X 
+DEL  /user/:user_id/table/:channel/store/:store_id?master=X
+GET  /user/:user_id/table/:channel/store/:store_id?master=X
 DEL  /user/:user_id/table/:channel?master_token=X
 GET  /user/:user_id/table?token=X
 
 Storage:
-- user's master: $TEABAG_DATA/:salt/:user/master.json
+- user's master: $TEABAG_DATA/:salt/:user/user.json
 - user's tokens: $TEABAG_DATA/:salt/:user/tokens.json
 - user's table: $TEABAG_DATA/:salt/:user/table.json
 
 ```
 
 ```
-teabag_str:
+teabag_str: TeaBag Store
 -----------
 
 user_id -> {
@@ -87,7 +87,7 @@ TODO: BLOB Storage
 ```
 
 ```
-teabag_cli:
+teabag_cli: TeaBag Client
 -----------
 
 var cli = teabag_cli({ token });

@@ -33,18 +33,18 @@ var setup = function() {
   //
 
   /* ADMIN */
-  app.put( '/user/:user_id',                             require('./routes/admin.js').put_user);
-  app.put( '/user/:user_id/master/:master',              require('./routes/admin.js').put_master);
+  app.put( '/user/:user_id/master/:master',                 require('./routes/admin.js').put_master);
 
   /* PUBLIC */
-  app.get( '/user/:user_id/token',                       require('./routes/token.js').get_token);
-  app.del( '/user/:user_id/token/:token',                require('./routes/token.js').del_token);
+  app.get( '/user/:user_id/token',                          require('./routes/token.js').get_token);
+  app.del( '/user/:user_id/token/:token',                   require('./routes/token.js').del_token);
 
-  app.put( '/user/:user_id/table/:channel/:str_host',    require('./routes/table.js').put_channel_host);
-  app.del( '/user/:user_id/table/:channel/:str_host',    require('./routes/table.js').del_channel_host);
-  app.del( '/user/:user_id/table/:channel',              require('./routes/table.js').del_channel);
-  app.get( '/user/:user_id/table/:channel',              require('./routes/table.js').get_channel);
-  app.get( '/user/:user_id/table',                       require('./routes/table.js').get_table);
+  app.post('/user/:user_id/table/:channel/store',           require('./routes/table.js').post_channel_store);
+  app.get( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').get_channel_store);
+  app.del( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').del_channel_store);
+  app.get( '/user/:user_id/table/:channel',                 require('./routes/table.js').get_channel);
+  app.del( '/user/:user_id/table/:channel',                 require('./routes/table.js').del_channel);
+  app.get( '/user/:user_id/table',                          require('./routes/table.js').get_table);
 };
 
 
