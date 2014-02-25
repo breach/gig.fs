@@ -33,9 +33,9 @@ var setup = function() {
   //
 
   /* ADMIN */
-  app.put( '/user/:user_id/master/:master',                 require('./routes/admin.js').put_master);
+  app.put( '/admin/user/:user_id/master/:master',           require('./routes/admin.js').put_master);
 
-  /* PUBLIC */
+  /* PUBLIC (MASTER) */
   app.get( '/user/:user_id/token',                          require('./routes/token.js').get_token);
   app.del( '/user/:user_id/token/:token',                   require('./routes/token.js').del_token);
 

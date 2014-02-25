@@ -70,7 +70,7 @@ exports.user_tokens_revoke = function(user_id, cb_) {
 /*                                   ROUTES                                   */
 /******************************************************************************/
 //
-// ### PUT /user/:user_id/master/:master
+// ### PUT /admin/user/:user_id/master/:master
 //
 exports.put_master = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));

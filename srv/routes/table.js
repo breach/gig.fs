@@ -108,8 +108,54 @@ exports.post_channel_store = function(req, res, next) {
         if(err) {
           return cb_(err);
         }
-        table[store.id] = store;
+        table[channel] = table[channel] || {};
+        table[channel][store.id] = store;
         return storage.put(user_id, 'table.json', table, cb_);
+      });
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.data(store);
+  });
+};
+
+//
+// ### GET /user/:user_id/table/:channel/store/:store_id
+//
+exports.get_channel_store = function(req, res, next) {
+  var channel = req.param('channel');
+  if(typeof channel !== 'string' || channel.length === 0) {
+    return res.error(common.err('Invalid `channel`: ' + req.param('channel'),
+                                'TableError:InvalidChannel'));
+  }
+
+  var store_id = req.param('store_id');
+  if(!store_id) {
+    return res.error(common.err('Invalid `store_id`: ' + req.param('store_id'),
+                                'TableError:InvalidStoreId'));
+  }
+  
+  var store = null;
+  async.series([
+    function(cb_) {
+      return exports.user_retrieve(req.param('user_id'), 
+                                   req.param('master'), 
+                                   function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      storage.get(user_id, 'table.json', function(err, table) {
+        if(err) {
+          return cb_(err);
+        }
+        if(table[channel] && table[channel][store_id]) {
+          store = table[channel][store_id];
+        }
+        return cb_();
       });
     }
   ], function(err) {
@@ -150,7 +196,9 @@ exports.del_channel_store = function(req, res, next) {
         if(err) {
           return cb_(err);
         }
-        delete table[store_id];
+        if(table[channel]) {
+          delete table[channel][store_id];
+        }
         return storage.put(user_id, 'table.json', table, cb_);
       });
     }
@@ -163,30 +211,115 @@ exports.del_channel_store = function(req, res, next) {
 };
 
 //
-// ### GET /user/:user_id/table/:channel/store/:store_id
+// ### GET /user/:user_id/table/:channel
 //
-exports.get_channel_store = function(req, res, next) {
-  return res.ok();
+exports.get_channel = function(req, res, next) {
+  var channel = req.param('channel');
+  if(typeof channel !== 'string' || channel.length === 0) {
+    return res.error(common.err('Invalid `channel`: ' + req.param('channel'),
+                                'TableError:InvalidChannel'));
+  }
+
+  var channel = null;
+  async.series([
+    function(cb_) {
+      return exports.user_retrieve(req.param('user_id'), 
+                                   req.param('master'), 
+                                   function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      storage.get(user_id, 'table.json', function(err, table) {
+        if(err) {
+          return cb_(err);
+        }
+        if(table[channel]) {
+          store = table[channel];
+        }
+        return cb_();
+      });
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.data(channel);
+  });
 };
+
 
 //
 // ### DEL /user/:user_id/table/:channel
 //
 exports.del_channel = function(req, res, next) {
-  return res.ok();
-};
+  var channel = req.param('channel');
+  if(typeof channel !== 'string' || channel.length === 0) {
+    return res.error(common.err('Invalid `channel`: ' + req.param('channel'),
+                                'TableError:InvalidChannel'));
+  }
 
-//
-// ### GET /user/:user_id/table/:channel
-//
-exports.get_channel = function(req, res, next) {
-  return res.ok();
+  async.series([
+    function(cb_) {
+      return exports.user_retrieve(req.param('user_id'), 
+                                   req.param('master'), 
+                                   function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      storage.get(user_id, 'table.json', function(err, table) {
+        if(err) {
+          return cb_(err);
+        }
+        delete table[channel];
+        return storage.put(user_id, 'table.json', table, cb_);
+      });
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
 };
 
 //
 // ### GET /user/:user_id/table
 //
 exports.get_table = function(req, res, next) {
-  return res.ok();
+  var channel = req.param('channel');
+  if(typeof channel !== 'string' || channel.length === 0) {
+    return res.error(common.err('Invalid `channel`: ' + req.param('channel'),
+                                'TableError:InvalidChannel'));
+  }
+
+  var table = null;
+  async.series([
+    function(cb_) {
+      return exports.user_retrieve(req.param('user_id'), 
+                                   req.param('master'), 
+                                   function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      storage.get(user_id, 'table.json', function(err, t) {
+        if(err) {
+          return cb_(err);
+        }
+        table = t;
+        return cb_();
+      });
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.data(table);
+  });
 };
 
