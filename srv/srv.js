@@ -54,8 +54,8 @@ common.log.out('TeaBag: teabag_srv [Started]');
 
 /* Setup */
 setup();
-var http_srv = http.createServer(app).listen(3000);
-common.log.out('HTTP Server started on port: 3000');
+var http_srv = http.createServer(app).listen(3999);
+common.log.out('HTTP Server started on port: 3999');
 
 // SAFETY NET (kills the process and the spawns)
 process.on('uncaughtException', function (err) {

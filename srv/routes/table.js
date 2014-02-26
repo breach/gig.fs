@@ -63,7 +63,7 @@ exports.user_retrieve = function(user_id, master, cb_) {
 exports.post_channel_store = function(req, res, next) {
   if(!req.body ||
      typeof req.body.url !== 'string' ||
-     typeof req.body.secret !== 'string') {
+     typeof req.body.code !== 'string') {
     return res.error(common.err('Invalid POST body: ' + JSON.stringify(req.body),
                                 'TableError:InvalidPostBody'));
   }
@@ -98,9 +98,9 @@ exports.post_channel_store = function(req, res, next) {
       store = {
         id: common.hash([url]),
         url: url,
-        secret: req.body.secret
+        code: req.body.code
       };
-      /* TODO(spolu): GET {url}/confirm?secret */
+      /* TODO(spolu): GET {url}/confirm?code */
       return cb_();
     },
     function(cb_) {

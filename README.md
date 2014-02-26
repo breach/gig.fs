@@ -52,7 +52,7 @@ GET  /user/:user_id/token/:token/check
 // table
 POST /user/:user_id/table/:channel/store
      master
-     { url, secret }
+     { url, code }
 DEL  /user/:user_id/table/:channel/store/:store_id
      master
 GET  /user/:user_id/table/:channel/store/:store_id
@@ -83,18 +83,26 @@ op := { payload, time }
 
 BASE_URL = /user/:user_id
 
+/* ADMIN */
+
+// confirmation
+GET  /admin/confirm/code
+     user_id
+PUT  /admin/user/:user_id
+
 /* PUBLIC */
 
 // confirmation
 GET  {BASE_URL}/confirm
-     secret
+     code
 
-POST {BASE_URL}/oplog?token=X             
+// oplog
+POST {BASE_URL}/oplog
      token
      { type, path, [ op, sha ], value }
 GET  {BASE_URL}/oplog
      token, path, type
-GET  {BASE_URL}/last                                    // returns value & last
+GET  {BASE_URL}/last                             // returns value & last
      token, path, type
 DEL  {BASE_URL}/oplog
      token, path, type, before
