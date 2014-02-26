@@ -97,20 +97,20 @@ exports.post_channel_store = function(req, res, next) {
       var url = url_p.href;
       store = {
         id: common.hash([url]),
-        url: url
+        url: url,
         secret: req.body.secret
       };
-      /* TODO(spolu): Contact the store to confirm addition */
+      /* TODO(spolu): GET {url}/confirm?secret */
       return cb_();
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user.user_id, 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         table[channel] = table[channel] || {};
         table[channel][store.id] = store;
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(user.user_id, 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -137,7 +137,9 @@ exports.get_channel_store = function(req, res, next) {
                                 'TableError:InvalidStoreId'));
   }
   
+  var user = null;
   var store = null;
+
   async.series([
     function(cb_) {
       return exports.user_retrieve(req.param('user_id'), 
@@ -148,7 +150,7 @@ exports.get_channel_store = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user.user_id, 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
@@ -182,6 +184,8 @@ exports.del_channel_store = function(req, res, next) {
                                 'TableError:InvalidStoreId'));
   }
 
+  var user = null;
+
   async.series([
     function(cb_) {
       return exports.user_retrieve(req.param('user_id'), 
@@ -192,14 +196,14 @@ exports.del_channel_store = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user.user_id, 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         if(table[channel]) {
           delete table[channel][store_id];
         }
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(user.user_id, 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -220,7 +224,9 @@ exports.get_channel = function(req, res, next) {
                                 'TableError:InvalidChannel'));
   }
 
+  var user = null;
   var channel = null;
+
   async.series([
     function(cb_) {
       return exports.user_retrieve(req.param('user_id'), 
@@ -231,12 +237,12 @@ exports.get_channel = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user.user_id, 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         if(table[channel]) {
-          store = table[channel];
+          channel = table[channel];
         }
         return cb_();
       });
@@ -260,6 +266,8 @@ exports.del_channel = function(req, res, next) {
                                 'TableError:InvalidChannel'));
   }
 
+  var user = null;
+
   async.series([
     function(cb_) {
       return exports.user_retrieve(req.param('user_id'), 
@@ -270,12 +278,12 @@ exports.del_channel = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user.user_id, 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         delete table[channel];
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(user.user_id, 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -296,7 +304,9 @@ exports.get_table = function(req, res, next) {
                                 'TableError:InvalidChannel'));
   }
 
+  var user = null;
   var table = null;
+
   async.series([
     function(cb_) {
       return exports.user_retrieve(req.param('user_id'), 
@@ -307,7 +317,7 @@ exports.get_table = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, t) {
+      storage.get(user.user_id, 'table.json', function(err, t) {
         if(err) {
           return cb_(err);
         }

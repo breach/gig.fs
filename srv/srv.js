@@ -38,6 +38,7 @@ var setup = function() {
   /* PUBLIC (MASTER) */
   app.get( '/user/:user_id/token',                          require('./routes/token.js').get_token);
   app.del( '/user/:user_id/token/:token',                   require('./routes/token.js').del_token);
+  app.get( '/user/:user_id/token/:token/check',             require('./routes/token.js').get_token_check);
 
   app.post('/user/:user_id/table/:channel/store',           require('./routes/table.js').post_channel_store);
   app.get( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').get_channel_store);

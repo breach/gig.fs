@@ -29,7 +29,7 @@ All calls to the nodes are trackable thanks to the token attached with it.
 -------------
 
 user_id -> { 
-  master_token,                                        // hash(user_id, pwd)
+  master,                                              // hash(user_id, pwd)
   channel -> [ { id, url } ],     
   [ tokens ]
 };
@@ -44,7 +44,7 @@ PUT  /user/:user_id/master/:master                     // revoke all tokens
 
 // token
 GET  /user/:user_id/token
-     master, expire
+     master, expire, description
 DEL  /user/:user_id/token/:token
      master
 GET  /user/:user_id/token/:token/check
