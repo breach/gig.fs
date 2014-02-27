@@ -28,9 +28,22 @@ var setup = function() {
     app.use(access.error);
   });
 
+  if(process.env['TEABAG_KEY']) {
+    common.KEY = process.env['TEABAG_KEY'];
+    common.log.out('Using Key: ' + common.KEY);
+  }
+
+  app.use('/admin', express.basicAuth('admin', common.KEY)); 
+
   //
   // #### _JSON ROUTES_
   //
+  
+  /* ADMIN */
+  app.put( '/admin/user/:user_id',                            require('./routes/admin.js').put_user);
+  app.get( '/admin/user/:user_id/code',                       require('./routes/admin.js').get_code);
+
+  /* PUBLIC */
   app.get( '/user/:user_id/confirm',                          require('./routes/user.js').get_confirm);
 
   /*

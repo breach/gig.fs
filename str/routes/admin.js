@@ -6,7 +6,7 @@
  * @author:  spolu
  *
  * @log:
- * - 2014-02-19 spolu  Creation
+ * - 2014-02-27 spolu  Creation
  */
 "use strict";
 
@@ -34,12 +34,6 @@ exports.user_create = function(user_id, cb_) {
       async.parallel({
         'user.json': function(cb_) {
           return storage.put(user_id, 'user.json', {}, cb_);
-        },
-        'tokens.json': function(cb_) {
-          return storage.put(user_id, 'tokens.json', [], cb_);
-        },
-        'table.json': function(cb_) {
-          return storage.put(user_id, 'table.json', {}, cb_);
         }
       }, function(err) {
         return cb_(err, {});
@@ -58,19 +52,13 @@ exports.user_create = function(user_id, cb_) {
 /*                                   ROUTES                                   */
 /******************************************************************************/
 //
-// ### PUT /admin/user/:user_id/master/:master
+// ### PUT /admin/user/:user_id
 //
-exports.put_master = function(req, res, next) {
+exports.put_user = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));
   if(!user_id) {
     return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
                                 'AdminError:InvalidUserId'));
-  }
-
-  var master = req.param('master');
-  if(!master) {
-    return res.error(common.err('Invalid `master`: ' + req.param('master'),
-                                'AdminError:InvalidMaster'));
   }
 
   var user = null;
@@ -82,19 +70,51 @@ exports.put_master = function(req, res, next) {
         return cb_(err);
       });
     },
-    function(cb_) {
-      user.master = master;
-      return storage.put(user_id, 'user.json', user, cb_);
-    },
-    function(cb_) {
-      /* Revokes all tokens. */
-      return storage.put(user_id, 'tokens.json', [], cb_);
-    }
   ], function(err) {
     if(err) {
       return res.error(err);
     }
     return res.ok();
+  });
+};
+
+//
+// ### GET /admin/user/:user_id/code
+//
+exports.get_code = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'AdminError:InvalidUserId'));
+  }
+
+  var user = null;
+  var code = null;
+  var expiry = null;
+
+  async.series([
+    function(cb_) {
+      storage.get(user_id, 'user.json', function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      expiry = Date.now() + 1000 * 60 * 2;
+      code = user_id + '_' + expiry + '_' + 
+             common.hash([common.KEY,
+                          user_id.toString(),
+                          expiry.toString()]);
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.data({
+      code: code,
+      expiry: expiry
+    });
   });
 };
 

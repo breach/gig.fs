@@ -86,9 +86,8 @@ BASE_URL = /user/:user_id
 /* ADMIN */
 
 // confirmation
-GET  /admin/confirm/code
-     user_id
 PUT  /admin/user/:user_id
+GET  /admin/user/:user_id/code
 
 /* PUBLIC */
 
@@ -110,8 +109,8 @@ GET  {BASE_URL}/oplog/stream
      token, path
 
 Storage:
-- user's tokens: $TEABAG_DATA/:salt/:user/tokens.json
-- user's data: $TEABAG_DATA/:salt/:user/root/:type/...[path]...
+- user's meta:   $TEABAG_DATA/:salt/:user/user.json
+- user's data:   $TEABAG_DATA/:salt/:user/root/:type/...[path]...
 
 TODO: BLOB Storage
 ```

@@ -28,6 +28,13 @@ var setup = function() {
     app.use(access.error);
   });
 
+  if(process.env['TEABAG_KEY']) {
+    common.KEY = process.env['TEABAG_KEY'];
+    common.log.out('Using Key: ' + common.KEY);
+  }
+
+  app.use('/admin', express.basicAuth('admin', common.KEY)); 
+
   //
   // #### _JSON ROUTES_
   //

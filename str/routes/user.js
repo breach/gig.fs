@@ -28,5 +28,52 @@ var storage = require('../../lib/storage.js').storage({});
 // ### GET /user/:user_id/confirm
 //
 exports.get_confirm = function(req, res, next) {
-  return res.ok();
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'UserError:InvalidUserId'));
+  }
+
+  var code = req.param('code');
+  if(typeof code !== 'string' || 
+     code.length === 0 || code.split('_').length !== 3) {
+    return res.error(common.err('Invalid `code`: ' + req.param('code'),
+                                'UserError:InvalidCode'));
+  }
+
+  var user = null;
+
+  async.series([
+    function(cb_) {
+      storage.get(user_id, 'user.json', function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+    function(cb_) {
+      if(parseInt(code.split('_')[0], 10) !== user_id) {
+        return cb_(common.err('Invalid `code`: ' + code,
+                              'UserError:InvalidCode'));
+      }
+      if(!parseInt(code.split('_')[1], 10) ||
+         parseInt(code.split('_')[1], 10) < Date.now()) {
+        return cb_(common.err('Invalid `code`: ' + code,
+                              'UserError:InvalidCode'));
+      }
+      if(code.split('_')[2] !== common.hash([common.KEY,
+                                            code.split('_')[0].toString(),
+                                            code.split('_')[1].toString()])) {
+        return cb_(common.err('Invalid `code`: ' + code,
+                              'UserError:InvalidCode'));
+      }
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
 };
+
+
