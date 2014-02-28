@@ -44,9 +44,9 @@ PUT  /user/:user_id/master/:master                     // revoke all tokens
 
 // token
 GET  /user/:user_id/token
-     master, expire, description
+     master, expiry, description
+GET  /user/:user_id/token/all
 DEL  /user/:user_id/token/:token
-     master
 GET  /user/:user_id/token/:token/check
 
 // table
@@ -55,14 +55,12 @@ POST /user/:user_id/table/:channel/store
      { url, code }
 DEL  /user/:user_id/table/:channel/store/:store_id
      master
-GET  /user/:user_id/table/:channel/store/:store_id
-     master
-GET  /user/:user_id/table/:channel
-     master
 DEL  /user/:user_id/table/:channel
      master
 GET  /user/:user_id/table
-     master
+     master | token
+GET  /user/:user_id/table/:channel
+     master | token
 
 Storage:
 - user's master: $TEABAG_DATA/:salt/:user/user.json

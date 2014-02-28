@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-02-28 spolu  Updated `code` format
  * - 2014-02-27 spolu  Creation
  */
 "use strict";
@@ -100,10 +101,12 @@ exports.get_code = function(req, res, next) {
       });
     },
     function(cb_) {
-      expiry = Date.now() + 1000 * 60 * 2;
-      code = user_id + '_' + expiry + '_' + 
+      var now = Date.now();
+      expiry = now + 1000 * 60 * 2;
+      code = now + '_' + expiry + '_' + 
              common.hash([common.KEY,
                           user_id.toString(),
+                          now.toString(),
                           expiry.toString()]);
       return cb_();
     }

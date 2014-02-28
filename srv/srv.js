@@ -7,6 +7,8 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-02-28 spolu  Separated srv/str keys
+ * - 2014-02-28 spolu  Added `token/all' route
  * - 2014-02-19 spolu  Creation
  */
 var express = require('express');
@@ -28,9 +30,9 @@ var setup = function() {
     app.use(access.error);
   });
 
-  if(process.env['TEABAG_KEY']) {
-    common.KEY = process.env['TEABAG_KEY'];
-    common.log.out('Using Key: ' + common.KEY);
+  if(process.env['TEABAG_SRV_KEY']) {
+    common.KEY = process.env['TEABAG_SRV_KEY'];
+    common.log.out('[Key]: ' + common.KEY);
   }
 
   app.use('/admin', express.basicAuth('admin', common.KEY)); 
@@ -44,15 +46,15 @@ var setup = function() {
 
   /* PUBLIC (MASTER) */
   app.get( '/user/:user_id/token',                          require('./routes/token.js').get_token);
+  app.get( '/user/:user_id/token/all',                      require('./routes/token.js').get_token_all);
   app.del( '/user/:user_id/token/:token',                   require('./routes/token.js').del_token);
   app.get( '/user/:user_id/token/:token/check',             require('./routes/token.js').get_token_check);
 
   app.post('/user/:user_id/table/:channel/store',           require('./routes/table.js').post_channel_store);
-  app.get( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').get_channel_store);
   app.del( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').del_channel_store);
-  app.get( '/user/:user_id/table/:channel',                 require('./routes/table.js').get_channel);
   app.del( '/user/:user_id/table/:channel',                 require('./routes/table.js').del_channel);
   app.get( '/user/:user_id/table',                          require('./routes/table.js').get_table);
+  app.get( '/user/:user_id/table/:channel',                 require('./routes/table.js').get_channel);
 };
 
 

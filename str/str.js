@@ -7,6 +7,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-26 spolu  Creation
  */
 var express = require('express');
@@ -28,9 +29,9 @@ var setup = function() {
     app.use(access.error);
   });
 
-  if(process.env['TEABAG_KEY']) {
-    common.KEY = process.env['TEABAG_KEY'];
-    common.log.out('Using Key: ' + common.KEY);
+  if(process.env['TEABAG_STR_KEY']) {
+    common.KEY = process.env['TEABAG_STR_KEY'];
+    common.log.out('[Key]: ' + common.KEY);
   }
 
   app.use('/admin', express.basicAuth('admin', common.KEY)); 

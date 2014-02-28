@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-02-28 spolu  Updated `code` format
  * - 2014-02-26 spolu  Creation
  */
 "use strict";
@@ -51,7 +52,8 @@ exports.get_confirm = function(req, res, next) {
       });
     },
     function(cb_) {
-      if(parseInt(code.split('_')[0], 10) !== user_id) {
+      if(!parseInt(code.split('_')[0], 10) ||
+         parseInt(code.split('_')[0], 10) >= Date.now()) {
         return cb_(common.err('Invalid `code`: ' + code,
                               'UserError:InvalidCode'));
       }
@@ -61,8 +63,9 @@ exports.get_confirm = function(req, res, next) {
                               'UserError:InvalidCode'));
       }
       if(code.split('_')[2] !== common.hash([common.KEY,
-                                            code.split('_')[0].toString(),
-                                            code.split('_')[1].toString()])) {
+                                             user_id.toString(),
+                                             code.split('_')[0].toString(),
+                                             code.split('_')[1].toString()])) {
         return cb_(common.err('Invalid `code`: ' + code,
                               'UserError:InvalidCode'));
       }
