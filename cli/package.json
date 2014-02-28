@@ -4,4 +4,5 @@
   "main": "./index.js",
   "dependencies": {
   }
+  "repository": "git://github.com/breach/teabag"
 }
