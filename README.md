@@ -117,6 +117,17 @@ TODO: BLOB Storage
 `teabag_cli`: TeaBag Client
 -------------
 
-var cli = teabag_cli({ token });
+var cli = require('teabag').teabag({
+  token: '...',
+  url: '...'
+});
+
+cli.init(cb_());
+cli.register(type, reduce_fun);
+
+cli.get(channel, type, path, cb_(err, value));
+cli.push(channel, type, path, op, cb_(err, value));
+
+cli.on(channel, type, path, cb_(type, value, [op]));
 
 ```
