@@ -21,12 +21,19 @@ var common = require('./common.js');
 // Teabag Client API
 //
 // ```
-// @spec {}
+// @spec { server, token }
 // ```
 var teabag = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
+
+  my.init = {
+    done: false,
+    callbacks: []
+  };
+
+  my.table = null;
 
   //
   // _public_
@@ -55,6 +62,44 @@ var teabag = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### init
+  //
+  // Initialisation function called by user or at first call on the client API.
+  // The initialization will retrieve the table from the server url using the
+  // token provided and construct the associated objects (table, channel, 
+  // stores)
+  //
+  // `init` can be called from multiple location, callbacks are queued and
+  // caled once the init phase is completed.
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  init = function(cb_) {
+    if(!my.init.done) {
+      my.init.callbacks.push(cb_);
+    }
+    else {
+      return cb_();
+    }
+    if(my.init.callbacks.length > 1) {
+      return;
+    }
+
+    my.table = require('./table.js').table({
+      server: spec.server,
+      token: spec.token
+    });
+
+    async.series([
+      my.table.init
+    ], function(err) {
+      my.init.done = true;
+      my.init.callbacks.forEach(function(cb_) {
+        cb_(err);
+      });
+      my.init.callbacks = [];
+    });
+  };
 
 
   common.method(that, 'init', init, _super);
