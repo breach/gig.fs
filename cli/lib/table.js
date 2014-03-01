@@ -34,7 +34,7 @@ var table = function(spec, my) {
   //
   // _public_
   // 
-
+  var init;      /* init(cb_()); */
 
   //
   // #### _private_
@@ -52,8 +52,57 @@ var table = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### init
+  //
+  // Inits the table object by contacting the server with the provided token
+  // and copying locally the table information, creating associated channel
+  // and store objects.
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  init = function(cb_) {
+    var url_p = require('url').parse(spec.server);
+    if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
+        url_p.query || url_p.search || 
+        !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
+      return cb_(common.err('Invalid Server URL: ' + spec.server,
+                            'TableError:InvalidUrl'));
+    }
+    var table_url = url_p.href + 'table?token='  + spec.token;
+
+    (url_p.protocol === 'https:' ? https : http).get(confirm_url, function(res) {
+      res.setEncoding('utf8');
+      var body = '';
+      res.on('data', function(chunk) {
+        body += chunk;
+      });
+      res.on('end', function() {
+        try {
+          var json = JSON.parse(body);
+          if(json.ok) {
+            return cb_();
+          }
+          else if(json.error) {
+            return cb_(common.err(json.error.message,
+                                  json.error.name));
+          }
+          else {
+            return cb_(common.err('Store Refusal: ' + store.url,
+                                  'TableError:StoreRefusal'));
+          }
+        }
+        catch(err) {
+          return cb_(err);
+        }
+      });
+    }).on('error', cb_);
+
+  };
+
+  common.method(that, 'init', init, _super);
 
   return that;
 };
 
 exports.table = table;
+
