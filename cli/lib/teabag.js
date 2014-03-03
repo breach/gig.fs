@@ -14,7 +14,7 @@ var util = require('util');
 var events = require('events');
 var fs = require('fs');
 var async = require('async');
-var common = require('./common.js');
+var common = require('../../lib/common.js');
 
 // ## teabag
 //
