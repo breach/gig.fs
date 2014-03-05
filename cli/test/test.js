@@ -4,6 +4,7 @@ var tb = require('../index.js').teabag({
 });
 
 tb.init(function(err) {
-  console.log(err);
-  console.log('INIT DONE');
+  if(err) {
+    console.log(err);
+  }
 });

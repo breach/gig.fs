@@ -22,6 +22,13 @@ var common = require('../../lib/common.js');
 //
 // Teabag Client Table Object
 //
+// The table object is initiated by retrieving the table data for this user over
+// the network. 
+//
+// TODO(spolu):
+// - The table information must be kept up to date periodically.
+// - Emitting events to notify of any change on the table structure
+//
 // ```
 // @spec { server, token }
 // ```
@@ -89,7 +96,7 @@ var table = function(spec, my) {
               if(my.json && !my.json.error) {
                 return cb_();
               }
-              else if(my.json.error) {
+              else if(my.json && my.json.error) {
                 return cb_(common.err(json.error.message,
                                       json.error.name));
               }
@@ -106,8 +113,11 @@ var table = function(spec, my) {
       },
       function(cb_) {
         async.each(Object.keys(my.json), function(c, cb_) {
-          console.log('INIT: ' + c);
-          return cb_();
+          my.channels[c] = require('./channel.js').channel({
+            name: c,
+            json: my.json[c]
+          });
+          my.channels[c].init(cb_);
         }, cb_);
       }
     ], cb_);
