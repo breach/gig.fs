@@ -26,7 +26,7 @@ var common = require('../../lib/common.js');
 // propagation among the stores for that channel.
 //
 // ```
-// @spec { name, json }
+// @spec { name, json, token, registry }
 // ```
 var channel = function(spec, my) {
   my = my || {};
@@ -36,6 +36,8 @@ var channel = function(spec, my) {
 
   my.name = spec.name;
   my.json = spec.json || {};
+  my.token = spec.token;
+  my.registry = spec.registry;
 
   my.stores = {};
 
@@ -99,7 +101,9 @@ var channel = function(spec, my) {
     async.each(Object.keys(my.json), function(s, cb_) {
       my.stores[s] = require('./store.js').store({
         id: s,
-        json: my.json[s]
+        json: my.json[s],
+        token: my.token,
+        registry: my.registry
       });
       my.stores[s].init(cb_);
     }, cb_);

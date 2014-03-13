@@ -32,7 +32,7 @@ var common = require('../../lib/common.js');
 // already interacted with. It uses long-polling
 //
 // ```
-// @spec { id, json }
+// @spec { id, json, token, registry }
 // ```
 var store = function(spec, my) {
   my = my || {};
@@ -42,13 +42,16 @@ var store = function(spec, my) {
 
   my.id = spec.id;
   my.json = spec.json || {};
+  my.token = spec.token;
+  my.registry = spec.registry;
 
-  my.stores = {};
+  my.tuples = {};
 
   //
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var get;       /* get(type, path, cb_); */
 
   //
   // #### _private_ 
@@ -73,7 +76,10 @@ var store = function(spec, my) {
       my.lp_itv = setTimeout(long_poll, 1000);
     }
 
-    my.lp_req = (my.json.secure ? https : http).get(my.stream_url, 
+    var stream_url = my.store_url + 'oplog/stream' + 
+      '?token=' + my.token;
+
+    my.lp_req = (my.json.secure ? https : http).get(stream_url, 
                                                     function(res) {
       res.setEncoding('utf8');
       var body = '';
@@ -108,6 +114,52 @@ var store = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### get
+  //
+  // Retrieves a value from the store and starts keeping the associated oplog
+  // updated for that tuple (type, path)
+  // ```
+  // @type {string} the data type
+  // @path {string} the path to retrieve
+  // @cb_  {function(err, value)} callback
+  // ```
+  get = function(type, path, cb_) {
+    if(!my.registry[type]) {
+      return cb_(common.err('Type not registered: ' + type,
+                            'StoreError:TypeNotRegistered'));
+    }
+    if(my.tuples[type] && my.tuples[type][path]) {
+      return cb_(null, my.tuples[type][path].value);
+    }
+    else {
+      var oplog_url = my.store_url + 'oplog' +
+        '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
+
+      (my.json.secure ? https : http).get(oplog_url, 
+                                          function(res) {
+        res.setEncoding('utf8');
+        var body = '';
+        res.on('data', function(chunk) {
+          body += chunk;
+        });
+        res.on('end', function() {
+          try {
+            var oplog = JSON.parse(body);
+            my.tuples[type] = my.typles[type] || {};
+            my.tuples[type][path] = {
+              oplog: oplog,
+              value: my.registry[type](oplog)
+            };
+            return cb_(null, my.tuples[type][path].value);
+          }
+          catch(err) {
+            return cb_(err);
+          }
+        });
+      }).on('error', cb_);
+    }
+  };
+
   // ### init
   //
   // Inits the channel by connecting to its oplog stream. This is a long-polling
@@ -124,8 +176,7 @@ var store = function(spec, my) {
                             'StoreError:InvalidUrl'));
     }
 
-    my.stream_url = url_p.href + 'oplog/stream';
-      
+    my.store_url = url_p.href;
     long_poll();
 
     common.log.out('STORE [' + my.id + '] Initialization');

@@ -34,6 +34,7 @@ var teabag = function(spec, my) {
   };
 
   my.table = null;
+  my.registry = {};
 
   //
   // _public_
@@ -87,7 +88,8 @@ var teabag = function(spec, my) {
 
     my.table = require('./table.js').table({
       server: spec.server,
-      token: spec.token
+      token: spec.token,
+      registry: my.registry
     });
 
     async.series([

@@ -30,7 +30,7 @@ var common = require('../../lib/common.js');
 // - Emitting events to notify of any change on the table structure
 //
 // ```
-// @spec { server, token }
+// @spec { server, token, registry }
 // ```
 var table = function(spec, my) {
   my = my || {};
@@ -39,6 +39,7 @@ var table = function(spec, my) {
 
   my.server = spec.server;
   my.token = spec.token;
+  my.registry = spec.registry;
 
   my.json = null;
   my.channels = {};
@@ -82,7 +83,7 @@ var table = function(spec, my) {
           return cb_(common.err('Invalid Server URL: ' + spec.server,
                                 'TableError:InvalidUrl'));
         }
-        var table_url = url_p.href + 'table?token='  + spec.token;
+        var table_url = url_p.href + 'table?token='  + my.token;
 
         (url_p.protocol === 'https:' ? https : http).get(table_url, function(res) {
           res.setEncoding('utf8');
@@ -115,7 +116,9 @@ var table = function(spec, my) {
         async.each(Object.keys(my.json), function(c, cb_) {
           my.channels[c] = require('./channel.js').channel({
             name: c,
-            json: my.json[c]
+            json: my.json[c],
+            token: my.token,
+            registry: my.registry
           });
           my.channels[c].init(cb_);
         }, cb_);
