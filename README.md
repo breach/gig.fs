@@ -4,33 +4,90 @@ TeaBag
 Centrally Orchestrated Multi Node Log-Based Storage with Distributed Conflict 
 Resolution
 
-TeaBag is a log-based multi node storage based on the principle of event
+TeaBag is a log-based multi node storage based on the principle of operation
 propagation and oplog pruning. Operations are pushed to the storage and conflict
 resolution is delegated to the client. Conflict resolution is done by retrieving
-the different log histories and replaying it a merged version.
+the different operation logs and replaying them in a merged version.
 
-Read are always first attempted local (delayed if the data was enver retrieved).
-A central authority server serves as rendez-vous to retrieve the mount table and
-the different nodes for each root path. 
+Read are always first attempted locally (delayed if the data was enver 
+retrieved). A central authority server serves as rendez-vous to retrieve the 
+mount table, that is, the different nodes for each root path. 
 
-Client library only stores data in memory. Tokens have an expiry date.
+The client library only stores data in memory. Tokens have an expiry date.
 
 - Small amount of data. Holds in memory.
 - Log based with history replay and distributed reconciliation
-- Cache nodes [in-memory, disk] and Full nodes (read/write over net)
+- Client nodes store data in memory
 - Writes get commited on network but optimistically accepted. Disconnected OK.
 - Notifications when pathes are modified (local and remote)
 - Temporary keys `{ node, end_time, signature }`, Revocations
 
-All calls to the nodes are trackable thanks to the token attached with it.
+All calls to the nodes are trackable thanks to the token attached to them.
+
+OPLOG Structure:
+----------------
+The oplog is an array of operations with the following structure:
+```
+{ 
+  date: 12312...
+  sha: a2ef...
+  payload: { ... }
+}
+
+{ 
+  date: 12312...
+  sha: a2ef...
+  value: { ... }
+}
+```
+The `payload` is defined by the user and an operation is always associated with
+a type. The user provides reducers per type she uses.
+
+Operations with a `value` field (called `values`) are used to allow the pruning
+of the oplog. Whenever a value is encoutered, history before that value is
+ignored by the conflict resolution algorithm.
+
+An oplog is initialized with a value equal to `null`. 
+
+The oplog is automatically pruned by inserting `values` into it whenever a
+client considers that all the stores it knows of are in sync. Inserting a value
+may fail on some stores, but it will eventually get propagated later on by other
+clients to all of the stores upon reconnect.
+
+Finally, stores stream operations they accept so that clients can stay up to
+date, so that most oplog read happen locally.
+
+Conflicts Resolution:
+---------------------
+```
+READ PATH:
+
+On each store, Read oplog
+When first oplog received
+Reduce current value and return
+Store in memory all other oplogs and register to stream
+Attempt syncing and pruning
+
+WRITE PATH:
+
+On each store, read and then insert op in oplog locally, recompute value
+push op to store
+Attempt syncing and pruning
+
+SYNCING & PRUNING:
+
+On each store, read oplog
+Compare each store oplogs
+If discrepancies, push ops to oplogs unaware of them
+Otherwise push a new value to all oplogs
 
 ```
-`teabag_srv`: TeaBag Server
--------------
+`teabag_table`: TeaBag Table
+--------------
 
 user_id -> { 
   master,                                              // hash(user_id, pwd)
-  channel -> [ { id, url } ],     
+  channel -> [ { id, store_url } ],     
   [ tokens ]
 };
 
@@ -70,14 +127,14 @@ Storage:
 ```
 
 ```
-`teabag_str`: TeaBag Store
--------------
+`teabag_store`: TeaBag Store
+---------------
 
 user_id -> {
-  { path, type } -> { initial, [ op ], final, sha },
-  [ tokens ]
+  table: { id, table_url }, 
+  { path, type } -> { [ op ] },
 }
-op := { payload, time }
+op := { date, sha, payload }
 
 BASE_URL = /user/:user_id
 
@@ -89,22 +146,19 @@ GET  /admin/user/:user_id/code
 
 /* PUBLIC */
 
-// confirmation
-GET  {BASE_URL}/confirm
-     code
+// srv confirmation
+POST {BASE_URL}/confirm
+     { url, code }
 
 // oplog
 POST {BASE_URL}/oplog
-     token
-     { type, path, [ op, sha ], value }
+     token, path, type
+     { date, sha, payload|value }
 GET  {BASE_URL}/oplog
      token, path, type
-GET  {BASE_URL}/last                             // returns value & last
-     token, path, type
-DEL  {BASE_URL}/oplog
-     token, path, type, before
+
 GET  {BASE_URL}/oplog/stream
-     token, path
+     token
 
 Storage:
 - user's meta:   $TEABAG_DATA/:salt/:user/user.json
@@ -114,8 +168,8 @@ TODO: BLOB Storage
 ```
 
 ```
-`teabag_cli`: TeaBag Client
--------------
+`teabag_client`: TeaBag Client
+----------------
 
 var cli = require('teabag').teabag({
   token: '...',

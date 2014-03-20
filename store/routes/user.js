@@ -13,7 +13,6 @@
 
 var querystring = require('querystring');
 var util = require('util');
-var http = require('http');
 var async = require('async');
 var common = require('../../lib/common.js');
 var storage = require('../../lib/storage.js').storage({});
@@ -26,19 +25,25 @@ var storage = require('../../lib/storage.js').storage({});
 /*                                   ROUTES                                   */
 /******************************************************************************/
 //
-// ### GET /user/:user_id/confirm
+// ### POST /user/:user_id/confirm
 //
-exports.get_confirm = function(req, res, next) {
+exports.post_confirm = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));
   if(!user_id) {
     return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
                                 'UserError:InvalidUserId'));
   }
 
-  var code = req.param('code');
+  if(!req.body ||
+     typeof req.body.table_url !== 'string' ||
+     typeof req.body.code !== 'string') {
+    return res.error(common.err('Invalid POST body: ' + JSON.stringify(req.body),
+                                'UserError:InvalidPostBody'));
+  }
+  var code = req.body.code;
   if(typeof code !== 'string' || 
      code.length === 0 || code.split('_').length !== 3) {
-    return res.error(common.err('Invalid `code`: ' + req.param('code'),
+    return res.error(common.err('Invalid `code`: ' + req.body.code,
                                 'UserError:InvalidCode'));
   }
 
@@ -70,7 +75,25 @@ exports.get_confirm = function(req, res, next) {
                               'UserError:InvalidCode'));
       }
       return cb_();
-    }
+    },
+    function(cb_) {
+      var url_p = require('url').parse(req.body.table_url);
+      user.table_url = req.body.table_url;
+      if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
+         url_p.query || url_p.search || 
+         !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
+        return cb_(common.err('Invalid URL: ' + req.body.url,
+                              'UserError:InvalidTableUrl'));
+      }
+      var table_url = url_p.href;
+      user.table = {
+        id: common.hash([table_url]),
+        url: table_url,
+        secure: url_p.protocol === 'https:' ? true : false,
+        created_time: Date.now()
+      };
+      return storage.put(user_id, 'user.json', user, cb_);
+    },
   ], function(err) {
     if(err) {
       return res.error(err);
@@ -79,4 +102,22 @@ exports.get_confirm = function(req, res, next) {
   });
 };
 
+//
+// ### POST /user/:user_id/oplog
+//
+exports.post_oplog = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'UserError:InvalidUserId'));
+  }
 
+  var token = req.param('token');
+
+  if(typeof token !== 'string' || token.length === 0) {
+    return res.error(common.err('Invalid `token`: ' + req.param('token'),
+                                'UserError:InvalidToken'));
+  }
+
+
+};

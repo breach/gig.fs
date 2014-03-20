@@ -31,6 +31,13 @@ var common = require('../../lib/common.js');
 // in charge of. Oplog events are filtered to the (type, path) tuples it
 // already interacted with. It uses long-polling
 //
+// An operation is made of a date, a hash and a payload:
+// ```
+// { date: 13120123913,
+//   sha: ae7c...,
+//   payload: { ... } }
+// ```
+//
 // ```
 // @spec { id, json, token, registry }
 // ```
@@ -52,6 +59,7 @@ var store = function(spec, my) {
   // 
   var init;      /* init(cb_()); */
   var get;       /* get(type, path, cb_); */
+  var push;      /* push(type, path, op, cb_(err, value)); */
 
   //
   // #### _private_ 
@@ -158,6 +166,64 @@ var store = function(spec, my) {
         });
       }).on('error', cb_);
     }
+  };
+
+  // ### push
+  //
+  // Pushes an operation on the oplog. The operation is not necessarilly the
+  // last one and this function can be used to merge oplogs. If the operation
+  // is already known, this call is ignored. Once the operation has been merged,
+  // the value is recomputed and the new oplog pushed to the store.
+  //
+  // The callback is returned once the store has accepted the operation.
+  //
+  // Operation structure:
+  // ```
+  // { date: 13120123913,
+  //   sha: ae7c...,
+  //   payload: { ... } }
+  // ```
+  //
+  // ```
+  // @type {string} the data type
+  // @path {string} the path to retrieve
+  // @op   {object} the operation to push on the oplog
+  // @cb_  {function(err, value)} callback
+  // ```
+  push = function(type, path, op, cb_) {
+    async.series([
+      function(cb_) {
+        get(type, path, cb_);
+      },
+      function(cb_) {
+        for(var i = 0; i < my.tuples[type][path].oplog.length; i ++) {
+          if(op.sha === my.tuples[type][path].oplog[i].sha) {
+            /* We found the operation so there's nothing to do here. Move on. */
+            return cb_();
+          }
+        }
+        my.tuples[type][path].oplog.push(op);
+        my.tuples[type][path].oplog.sort(function(o1, o2) {
+          return o2.date - o1.date;
+        });
+
+        try {
+          my.tuples[type][path].value = my.registry[type](oplog);
+        }
+        catch(err) {
+          return cb_(err);
+        }
+      },
+      function(cb_) {
+        /* TODO(spolu): Push operation to store. */
+        return cb_();
+      }
+    ], function(err) {
+      if(err) {
+        return cb_(err);
+      }
+      return cb_(null my.tuples[type][path].value);
+    });
   };
 
   // ### init

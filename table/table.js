@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /*
- * TeaBag: srv.js
+ * TeaBag: table.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
  * @author: spolu
  *
  * @log:
+ * - 2014-03-19 spolu  Renaming to `table`
  * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-28 spolu  Added `token/all' route
  * - 2014-02-19 spolu  Creation
@@ -30,9 +31,9 @@ var setup = function() {
     app.use(access.error);
   });
 
-  if(process.env['TEABAG_SRV_KEY']) {
-    common.KEY = process.env['TEABAG_SRV_KEY'];
-    common.log.out('[Key]: ' + common.KEY);
+  if(process.env['TEABAG_TABLE_KEY']) {
+    common.KEY = process.env['TEABAG_TABLE_KEY'];
+    common.log.out('[KEY]: ' + common.KEY);
   }
 
   app.use('/admin', express.basicAuth('admin', common.KEY)); 
@@ -59,12 +60,21 @@ var setup = function() {
 
 
 // INIT & START
-common.log.out('TeaBag: teabag_srv [Started]');
+common.log.out('TeaBag: teabag_table [Started]');
 
 /* Setup */
 setup();
 var http_srv = http.createServer(app).listen(3999);
 common.log.out('HTTP Server started on port: 3999');
+
+if(process.env['TEABAG_TABLE_URL']) {
+  common.BASE_URL = process.env['TEABAG_TABLE_URL'];
+  common.log.out('[TABLE_URL]: ' + common.BASE_URL);
+}
+else {
+  common.BASE_URL = 'http://localhost:3999/'
+  common.log.out('[TABLE_URL]: ' + common.BASE_URL);
+}
 
 // SAFETY NET (kills the process and the spawns)
 process.on('uncaughtException', function (err) {

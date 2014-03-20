@@ -26,7 +26,7 @@ var https = require('https');
 /******************************************************************************/
 //
 // ### POST /user/:user_id/table/:channel/store
-//          { url }
+//          { store_url }
 //          master only
 //
 exports.post_channel_store = function(req, res, next) {
@@ -37,7 +37,7 @@ exports.post_channel_store = function(req, res, next) {
   }
 
   if(!req.body ||
-     typeof req.body.url !== 'string' ||
+     typeof req.body.store_url !== 'string' ||
      typeof req.body.code !== 'string') {
     return res.error(common.err('Invalid POST body: ' + JSON.stringify(req.body),
                                 'TableError:InvalidPostBody'));
@@ -63,17 +63,17 @@ exports.post_channel_store = function(req, res, next) {
       });
     },
     function(cb_) {
-      var url_p = require('url').parse(req.body.url);
+      var url_p = require('url').parse(req.body.store_url);
       if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
          url_p.query || url_p.search || 
          !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
         return cb_(common.err('Invalid URL: ' + req.body.url,
-                              'TableError:InvalidUrl'));
+                              'TableError:InvalidStoreUrl'));
       }
-      var url = url_p.href;
+      var store_url = url_p.href;
       store = {
-        id: common.hash([url]),
-        url: url,
+        id: common.hash([store_url]),
+        url: store_url,
         code: req.body.code,
         secure: url_p.protocol === 'https:' ? true : false,
         created_time: Date.now()

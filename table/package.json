@@ -1,7 +1,7 @@
 {
-  "name": "teabag_srv",
+  "name": "teabag_table",
   "version": "0.1.1",
-  "main": "./srv.js",
+  "main": "./table.js",
   "dependencies": {
     "express": "3.4.x"
   },

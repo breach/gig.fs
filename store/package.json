@@ -1,7 +1,7 @@
 {
-  "name": "teabag_str",
+  "name": "teabag_store",
   "version": "0.1.1",
-  "main": "./str.js",
+  "main": "./store.js",
   "dependencies": {
     "express": "3.4.x"
   },

@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /*
- * TeaBag: srv.js
+ * TeaBag: store.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
  * @author: spolu
  *
  * @log:
+ * - 2014-03-19 spolu  Renaming to `store`
  * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-26 spolu  Creation
  */
@@ -29,9 +30,9 @@ var setup = function() {
     app.use(access.error);
   });
 
-  if(process.env['TEABAG_STR_KEY']) {
-    common.KEY = process.env['TEABAG_STR_KEY'];
-    common.log.out('[Key]: ' + common.KEY);
+  if(process.env['TEABAG_STORE_KEY']) {
+    common.KEY = process.env['TEABAG_STORE_KEY'];
+    common.log.out('[KEY]: ' + common.KEY);
   }
 
   app.use('/admin', express.basicAuth('admin', common.KEY)); 
@@ -45,18 +46,17 @@ var setup = function() {
   app.get( '/admin/user/:user_id/code',                       require('./routes/admin.js').get_code);
 
   /* PUBLIC */
-  app.get( '/user/:user_id/confirm',                          require('./routes/user.js').get_confirm);
+  app.post('/user/:user_id/confirm',                          require('./routes/user.js').post_confirm);
 
-  /*
   app.post('/user/:user_id/oplog',                            require('./routes/user.js').post_oplog);
+  /*
   app.get( '/user/:user_id/oplog',                            require('./routes/user.js').get_oplog);
-  app.del( '/user/:user_id/oplog',                            require('./routes/user.js').del_oplog);
   app.get( '/user/:user_id/oplog/stream',                     require('./routes/user.js').get_oplog_stream);
   */
 };
 
 // INIT & START
-common.log.out('TeaBag: teabag_str [Started]');
+common.log.out('TeaBag: teabag_store [Started]');
 
 /* Setup */
 setup();
