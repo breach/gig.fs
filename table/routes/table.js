@@ -26,7 +26,7 @@ var storage = require('../../lib/storage.js').storage({});
 /******************************************************************************/
 //
 // ### POST /user/:user_id/table/:channel/store
-//          { store_url }
+//          { store_url, code }
 //          master only
 //
 exports.post_channel_store = function(req, res, next) {

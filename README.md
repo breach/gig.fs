@@ -9,18 +9,19 @@ propagation and oplog pruning. Operations are pushed to the storage and conflict
 resolution is delegated to the client. Conflict resolution is done by retrieving
 the different operation logs and replaying them in a merged version.
 
-Read are always first attempted locally (delayed if the data was enver 
-retrieved). A central authority server serves as rendez-vous to retrieve the 
-mount table, that is, the different nodes for each root path. 
+Read are always first attempted locally (delayed if the data was never retrieved 
+yet). A central authority server serves as rendez-vous to retrieve the mount 
+table, that is, the different nodes for each root path, called `channels`.
 
-The client library only stores data in memory. Tokens have an expiry date.
+The client library only stores data in memory. Tokens have an expiry date. The
+entire system operates on the following asumptions:
 
 - Small amount of data. Holds in memory.
 - Log based with history replay and distributed reconciliation
 - Client nodes store data in memory
 - Writes get commited on network but optimistically accepted. Disconnected OK.
 - Notifications when pathes are modified (local and remote)
-- Temporary keys `{ node, end_time, signature }`, Revocations
+- Temporary keys `{ node, end_time, signature }`
 
 All calls to the nodes are trackable thanks to the token attached to them.
 
@@ -62,7 +63,7 @@ Conflicts Resolution:
 ```
 READ PATH:
 
-On each store, Read oplog
+On each store, Read oplog if not already in memory
 When first oplog received
 Reduce current value and return
 Store in memory all other oplogs and register to stream
@@ -79,7 +80,7 @@ SYNCING & PRUNING:
 On each store, read oplog
 Compare each store oplogs
 If discrepancies, push ops to oplogs unaware of them
-Otherwise push a new value to all oplogs
+Otherwise push a new value to all oplogs for pruning
 
 ```
 
@@ -111,7 +112,7 @@ GET  /user/:user_id/token/:token/check
 // table
 POST /user/:user_id/table/:channel/store
      master
-     { url, code }
+     { store_url, code }
 DEL  /user/:user_id/table/:channel/store/:store_id
      master
 DEL  /user/:user_id/table/:channel
@@ -148,9 +149,9 @@ GET  /admin/user/:user_id/code
 
 /* PUBLIC */
 
-// srv confirmation
+// table confirmation
 POST {BASE_URL}/confirm
-     { url, code }
+     { table_url, code }
 
 // oplog
 POST {BASE_URL}/oplog

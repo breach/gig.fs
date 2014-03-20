@@ -26,6 +26,7 @@ var storage = require('../../lib/storage.js').storage({});
 /******************************************************************************/
 //
 // ### POST /user/:user_id/confirm
+//          { table_url, code }
 //
 exports.post_confirm = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));
