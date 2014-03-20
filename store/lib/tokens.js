@@ -12,8 +12,7 @@
 
 var util = require('util');
 var async = require('async');
+var request = require('request');
 var common = require('../../lib/common.js');
-var http = require('http');
-var https = require('https');
 
 

@@ -78,18 +78,16 @@ exports.post_confirm = function(req, res, next) {
     },
     function(cb_) {
       var url_p = require('url').parse(req.body.table_url);
-      user.table_url = req.body.table_url;
       if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
          url_p.query || url_p.search || 
          !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
-        return cb_(common.err('Invalid URL: ' + req.body.url,
+        return cb_(common.err('Invalid URL: ' + req.body.table_url,
                               'UserError:InvalidTableUrl'));
       }
       var table_url = url_p.href;
       user.table = {
         id: common.hash([table_url]),
         url: table_url,
-        secure: url_p.protocol === 'https:' ? true : false,
         created_time: Date.now()
       };
       return storage.put(user_id, 'user.json', user, cb_);

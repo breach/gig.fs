@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-03-20 spolu  Use `request` package
  * - 2014-02-28 spolu  Allow table access with token
  * - 2014-02-28 spolu  Move utility methods to `utility.js`
  * - 2014-02-19 spolu  Creation
@@ -15,11 +16,10 @@
 var querystring = require('querystring');
 var util = require('util');
 var async = require('async');
+var request = require('request');
+
 var common = require('../../lib/common.js');
 var storage = require('../../lib/storage.js').storage({});
-
-var http = require('http');
-var https = require('https');
 
 /******************************************************************************/
 /*                                   ROUTES                                   */
@@ -70,44 +70,38 @@ exports.post_channel_store = function(req, res, next) {
         return cb_(common.err('Invalid URL: ' + req.body.url,
                               'TableError:InvalidStoreUrl'));
       }
-      var store_url = url_p.href;
       store = {
-        id: common.hash([store_url]),
-        url: store_url,
+        id: common.hash([url_p.href]),
+        url: url_p.href,
         code: req.body.code,
-        secure: url_p.protocol === 'https:' ? true : false,
         created_time: Date.now()
       };
       return cb_();
     },
     function(cb_) {
-      var confirm_url = store.url + 'confirm?code=' + store.code;
-      (store.secure ? https : http).get(confirm_url, function(res) {
-        res.setEncoding('utf8');
-        var body = '';
-        res.on('data', function(chunk) {
-          body += chunk;
-        });
-        res.on('end', function() {
-          try {
-            var json = JSON.parse(body);
-            if(json.ok) {
-              return cb_();
-            }
-            else if(json.error) {
-              return cb_(common.err(json.error.message,
-                                    json.error.name));
-            }
-            else {
-              return cb_(common.err('Store Refusal: ' + store.url,
-                                    'TableError:StoreRefusal'));
-            }
-          }
-          catch(err) {
-            return cb_(err);
-          }
-        });
-      }).on('error', cb_);
+      var confirm_url = store.url + 'confirm';
+      request.post({
+        url: confirm_url,
+        json: {
+          code: store.code,
+          table_url: common.BASE_URL + 'user/' + user_id + '/'
+        }
+      }, function(err, res, json) {
+        if(err) {
+          return cb_(err);
+        }
+        if(json.ok) {
+          return cb_();
+        }
+        else if(json.error) {
+          return cb_(common.err(json.error.message,
+                                json.error.name));
+        }
+        else {
+          return cb_(common.err('Store Refusal: ' + store.url,
+                                'TableError:StoreRefusal'));
+        }
+      });
     },
     function(cb_) {
       storage.get(user_id, 'table.json', function(err, table) {

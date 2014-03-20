@@ -14,7 +14,6 @@ var util = require('util');
 var events = require('events');
 var fs = require('fs');
 var http = require('http');
-var https = require('https');
 var async = require('async');
 var common = require('../../lib/common.js');
 

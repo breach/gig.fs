@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-05 spolu   Creation (on a plane!)
  */
 "use strict";
@@ -13,8 +14,8 @@
 var util = require('util');
 var events = require('events');
 var fs = require('fs');
-var http = require('http');
-var https = require('https');
+var request = require('request');
+
 var async = require('async');
 var common = require('../../lib/common.js');
 
@@ -87,36 +88,28 @@ var store = function(spec, my) {
     var stream_url = my.store_url + 'oplog/stream' + 
       '?token=' + my.token;
 
-    my.lp_req = (my.json.secure ? https : http).get(stream_url, 
-                                                    function(res) {
-      res.setEncoding('utf8');
-      var body = '';
-      res.on('data', function(chunk) {
-        body += chunk;
-      });
-      res.on('end', function() {
-        my.lp_req = null;
-        try {
-          var stream = JSON.parse(body);
-          if(stream && !stream.error) {
-            /* TODO(spolu): handle stream data. */
-            return long_poll();
-          }
-          else {
-            var err = common.err('Store Stream Error: ' + my.strem_url,
-                                 'StoreError:StreamError');
-            if(stream && stream.error) {
-              err = common.err(json.error.message,
-                               json.error.name);
-            }
-            throw err;
-          }
+    my.lp_req = request.get({
+      url: stream_url,
+      json: true
+    }, function(err, res, stream) {
+      my.lp_req = null;
+      if(err) {
+        handle_error(err);
+      }
+      if(stream && !stream.error) {
+        /* TODO(spolu): handle stream data. */
+        return long_poll();
+      }
+      else {
+        var err = common.err('Store Stream Error: ' + my.strem_url,
+                             'StoreError:StreamError');
+        if(stream && stream.error) {
+          err = common.err(json.error.message,
+                           json.error.name);
         }
-        catch(err) {
-          return handle_error(err);
-        }
-      });
-    }).on('error', handle_error);
+        return handle_error(err);
+      }
+    });
   };
   
   /****************************************************************************/

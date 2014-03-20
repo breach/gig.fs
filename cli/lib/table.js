@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-01 spolu   Creation
  */
 "use strict";
@@ -13,9 +14,8 @@
 var util = require('util');
 var events = require('events');
 var fs = require('fs');
-var http = require('http');
-var https = require('https');
 var async = require('async');
+var request = require('request');
 var common = require('../../lib/common.js');
 
 // ## table
@@ -84,33 +84,26 @@ var table = function(spec, my) {
                                 'TableError:InvalidUrl'));
         }
         var table_url = url_p.href + 'table?token='  + my.token;
-
-        (url_p.protocol === 'https:' ? https : http).get(table_url, function(res) {
-          res.setEncoding('utf8');
-          var body = '';
-          res.on('data', function(chunk) {
-            body += chunk;
-          });
-          res.on('end', function() {
-            try {
-              my.json = JSON.parse(body);
-              if(my.json && !my.json.error) {
-                return cb_();
-              }
-              else if(my.json && my.json.error) {
-                return cb_(common.err(json.error.message,
-                                      json.error.name));
-              }
-              else {
-                return cb_(common.err('Server Error: ' + table_url,
-                                      'TableError:ServerError'));
-              }
-            }
-            catch(err) {
-              return cb_(err);
-            }
-          });
-        }).on('error', cb_);
+        request.get({
+          url: table_url,
+          json: true
+        }, function(err, res, json) {
+          if(err) {
+            return cb_(err);
+          }
+          if(json && !json.error) {
+            my.json = json;
+            return cb_();
+          }
+          else if(json && json.error) {
+            return cb_(common.err(json.error.message,
+                                  json.error.name));
+          }
+          else {
+            return cb_(common.err('Server Error: ' + table_url,
+                                  'TableError:ServerError'));
+          }
+        });
       },
       function(cb_) {
         async.each(Object.keys(my.json), function(c, cb_) {
