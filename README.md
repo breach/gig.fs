@@ -82,9 +82,11 @@ If discrepancies, push ops to oplogs unaware of them
 Otherwise push a new value to all oplogs
 
 ```
-`teabag_table`: TeaBag Table
---------------
 
+TeaBag Table
+------------
+
+```
 user_id -> { 
   master,                                              // hash(user_id, pwd)
   channel -> [ { id, store_url } ],     
@@ -126,10 +128,10 @@ Storage:
 
 ```
 
-```
-`teabag_store`: TeaBag Store
----------------
+TeaBag Store
+------------
 
+```
 user_id -> {
   table: { id, table_url }, 
   { path, type } -> { [ op ] },
@@ -167,10 +169,10 @@ Storage:
 TODO: BLOB Storage
 ```
 
-```
-`teabag_client`: TeaBag Client
-----------------
+TeaBag Client
+-------------
 
+```
 var cli = require('teabag').teabag({
   token: '...',
   url: '...'
