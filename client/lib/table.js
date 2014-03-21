@@ -48,7 +48,9 @@ var table = function(spec, my) {
   // _public_
   // 
   var init;      /* init(cb_()); */
+
   var channel;   /* channel(channel); */
+  var channels;  /* channels(); */
 
   //
   // #### _private_
@@ -74,6 +76,13 @@ var table = function(spec, my) {
   // ```
   channel = function(channel) {
     return (my.channels[channel] || null);
+  };
+
+  // ### channels
+  //
+  // Returns the list of available channels
+  channels = function() {
+    return Object.keys(my.channels);
   };
 
   // ### init
@@ -131,6 +140,8 @@ var table = function(spec, my) {
   };
 
   common.method(that, 'channel', channel, _super);
+  common.method(that, 'channels', channels, _super);
+
   common.method(that, 'init', init, _super);
 
   return that;

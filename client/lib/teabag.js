@@ -47,6 +47,8 @@ var teabag = function(spec, my) {
 
   var on;        /* on(channel, type, path, cb_(class, value, [op])); */
 
+  var channels;  /* channels(); */
+
   //
   // #### _private_
   //
@@ -63,6 +65,14 @@ var teabag = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### channels
+  //
+  // Returns the list of available channels
+  channels = function() {
+    if(!my.table) return [];
+    return my.table.channels();
+  };
+
   // ### get
   //
   // Retrieves the value for the given channel, type and path
@@ -74,7 +84,7 @@ var teabag = function(spec, my) {
   // ```
   get = function(channel, type, path, cb_) {
     if(!my.init.done) {
-      my.init.callbacks.push(funtion(err) {
+      my.init.callbacks.push(function(err) {
         if(err) {
           return cb_(err);
         }
@@ -104,7 +114,7 @@ var teabag = function(spec, my) {
   // ```
   push = function(channel, type, path, payload, cb_) {
     if(!my.init.done) {
-      my.init.callbacks.push(funtion(err) {
+      my.init.callbacks.push(function(err) {
         if(err) {
           return cb_(err);
         }
@@ -180,6 +190,7 @@ var teabag = function(spec, my) {
     });
   };
 
+  common.method(that, 'channels', channels, _super);
 
   common.method(that, 'init', init, _super);
   common.method(that, 'register', register, _super);

@@ -22,6 +22,15 @@ var tokens = require('../lib/tokens.js').tokens({});
 /******************************************************************************/
 /*                               UTILITY METHODS                              */
 /******************************************************************************/
+exports.empty_oplog = function() {
+  var op = {
+    date: 0,
+    value: null
+  };
+  op.sha = common.hash([ op.date.toString(),
+                         JSON.stringify(op.value) ]);
+  return [op];
+};
 
 /******************************************************************************/
 /*                                   ROUTES                                   */
@@ -105,6 +114,7 @@ exports.post_confirm = function(req, res, next) {
 
 //
 // ### POST /user/:user_id/oplog
+//          { date, payload | value, sha }
 //
 exports.post_oplog = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));
@@ -126,7 +136,22 @@ exports.post_oplog = function(req, res, next) {
   if(typeof path !== 'string') {
     return res.error(common.err('Invalid `path`: ' + req.param('path'),
                                 'UserError:InvalidPath'));
-    /* TODO(spolu): Need to secure that a bit more? */
+  }
+
+  var op = {
+    date: req.body.date,
+    sha: req.body.sha
+  }
+  if(req.body.payload) {
+    op.payload = req.body.payload
+  }
+  else if(req.body.value) {
+    op.value = req.body.value
+  }
+
+  if((!op.payload && !op.value) || !op.sha || !op.date) {
+    return res.error(common.err('Invalid `op` Body',
+                                'UserError:InvalidOpBody'));
   }
 
   var oplog = null;
@@ -147,16 +172,33 @@ exports.post_oplog = function(req, res, next) {
     function(cb_) {
       storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
         if(err) {
-          console.log(err);
-          console.log(err.code);
-          return cb_(err);
+          if(err.code === 'ENOENT') {
+            oplog = exports.empty_oplog();
+            return cb_();
+          }
+          else {
+            return cb_(err);
+          }
         }
         oplog = json;
         return cb_();
       });
     },
     function(cb_) {
-      return cb_();
+      for(var i = 0; i < oplog.length; i ++) {
+        if(op.sha === oplog[i].sha) {
+          return cb_();
+        }
+      }
+      oplog.push(op);
+      oplog.sort(function(o1, o2) {
+        return o1.date - o2.date;
+      });
+
+      return storage.put(user_id, 
+                         '/root/' + type + '/' + path, 
+                         oplog, 
+                         cb_);
     }
   ], function(err) {
     if(err) {
@@ -178,6 +220,21 @@ exports.get_oplog = function(req, res, next) {
 
   var token = req.param('token');
 
+  var type = req.param('type');
+  if(typeof type !== 'string' || 
+     type.indexOf('/') !== -1 || type.indexOf('.') !== -1) {
+    return res.error(common.err('Invalid `type`: ' + req.param('type'),
+                                'UserError:InvalidType'));
+  }
+
+  var path = req.param('path');
+  if(typeof path !== 'string') {
+    return res.error(common.err('Invalid `path`: ' + req.param('path'),
+                                'UserError:InvalidPath'));
+  }
+
+  var oplog = [];
+
   async.series([
     function(cb_) {
       tokens.check(user_id, token, function(err, valid) {
@@ -192,13 +249,25 @@ exports.get_oplog = function(req, res, next) {
       });
     },
     function(cb_) {
-      return cb_();
+      storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
+        if(err) {
+          if(err.code === 'ENOENT') {
+            oplog = exports.empty_oplog();
+            return cb_();
+          }
+          else {
+            return cb_(err);
+          }
+        }
+        oplog = json;
+        return cb_();
+      });
     }
   ], function(err) {
     if(err) {
       return res.error(err);
     }
-    return res.ok();
+    return res.data(oplog);
   });
 };
 

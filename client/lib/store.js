@@ -59,6 +59,7 @@ var store = function(spec, my) {
   // _public_
   // 
   var init;      /* init(cb_()); */
+
   var get;       /* get(type, path, cb_); */
   var push;      /* push(type, path, op, cb_(err, value)); */
 
@@ -145,7 +146,7 @@ var store = function(spec, my) {
         }
         if(Array.isArray(oplog)) {
           try {
-            my.tuples[type] = my.typles[type] || {};
+            my.tuples[type] = my.tuples[type] || {};
             my.tuples[type][path] = {
               oplog: oplog,
               value: my.registry[type](oplog)
@@ -197,15 +198,17 @@ var store = function(spec, my) {
         }
         my.tuples[type][path].oplog.push(op);
         my.tuples[type][path].oplog.sort(function(o1, o2) {
-          return o2.date - o1.date;
+          return o1.date - o2.date;
         });
 
         try {
-          my.tuples[type][path].value = my.registry[type](oplog);
+          my.tuples[type][path].value = 
+            my.registry[type](my.tuples[type][path].oplog);
         }
         catch(err) {
           return cb_(err);
         }
+        return cb_();
       }
     ], function(err) {
       if(err) {
@@ -214,7 +217,27 @@ var store = function(spec, my) {
       /* We return the callback as soon as the op is pushed in memory. */
       cb_(null, my.tuples[type][path].value);
 
-      /* TODO(spolu): Push operation to store. */
+      var oplog_url = my.store_url + 'oplog' +
+        '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
+
+      request.post({
+        url: oplog_url,
+        json: op
+      }, function(err, res, json) {
+        /* We can't provide feedback here but we'll print errors. */
+        if(err) {
+          common.log.error(err);
+        }
+        if(res.statusCode !== 200 || !json.ok) {
+          var err = common.err('Store Oplog Error: ' + oplog_url,
+                               'StoreError:OplogError');
+          if(json && json.error) {
+            err = common.err(json.error.message,
+                             json.error.name);
+          }
+          common.log.error(err);
+        }
+      });
     });
   };
 
@@ -235,13 +258,16 @@ var store = function(spec, my) {
     }
 
     my.store_url = url_p.href;
-    long_poll();
+    //long_poll();
 
     common.log.out('STORE [' + my.id + '] Initialization');
     return cb_();
   };
 
   common.method(that, 'init', init, _super);
+
+  common.method(that, 'get', get, _super);
+  common.method(that, 'push', push, _super);
 
   return that;
 };

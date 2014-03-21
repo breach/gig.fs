@@ -132,6 +132,9 @@ var channel = function(spec, my) {
 
   common.method(that, 'init', init, _super);
 
+  common.method(that, 'get', get, _super);
+  common.method(that, 'push', push, _super);
+
   return that;
 };
 

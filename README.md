@@ -156,7 +156,7 @@ POST {BASE_URL}/confirm
 // oplog
 POST {BASE_URL}/oplog
      token, path, type
-     { date, sha, payload|value }
+     { date, payload|value, sha }
 GET  {BASE_URL}/oplog
      token, path, type
 
