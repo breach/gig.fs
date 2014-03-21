@@ -66,9 +66,8 @@ var channel = function(spec, my) {
   /****************************************************************************/
   // ### get
   //
-  // Retrieves a value for this channel. The concurrency model is fairly simple:
-  // Each store is asked for a value, as soon as the first one responds, the
-  // value is returned to the called
+  // Retrieves a value for this channel. See README for the conflict resolution
+  // model.
   // ```
   // @type {string} the data type
   // @path {string} the path to retrieve
@@ -78,6 +77,29 @@ var channel = function(spec, my) {
     var replied = false;
     Object.keys(my.stores).forEach(function(s) {
       my.stores[s].get(type, path, function(err, value) {
+        if(!replied) {
+          replied = true;
+          return cb_(err, value);
+        }
+        /* NOP. */
+      });
+    });
+  };
+
+  // ### push
+  //
+  // Pushes an operation on the oplog. See README for the conflict resolution
+  // model.
+  // ```
+  // @type {string} the data type
+  // @path {string} the path to push to
+  // @op   {object} the operation to push on the oplog
+  // @cb_  {function(err, value)} callback
+  // ```
+  push = function(type, path, op, cb_) {
+    var replied = false;
+    Object.keys(my.stores).forEach(function(s) {
+      my.stores[s].push(type, path, op, function(err, value) {
         if(!replied) {
           replied = true;
           return cb_(err, value);

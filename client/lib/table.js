@@ -48,6 +48,7 @@ var table = function(spec, my) {
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var channel;   /* channel(channel); */
 
   //
   // #### _private_
@@ -65,6 +66,16 @@ var table = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### channel
+  //
+  // Returns the channel object for the requested channel
+  // ```
+  // @channel {string} the channel name
+  // ```
+  channel = function(channel) {
+    return (my.channels[channel] || null);
+  };
+
   // ### init
   //
   // Inits the table object by contacting the server with the provided token
@@ -119,6 +130,7 @@ var table = function(spec, my) {
     ], cb_);
   };
 
+  common.method(that, 'channel', channel, _super);
   common.method(that, 'init', init, _super);
 
   return that;

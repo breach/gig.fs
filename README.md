@@ -58,8 +58,8 @@ clients to all of the stores upon reconnect.
 Finally, stores stream operations they accept so that clients can stay up to
 date, so that most oplog read happen locally.
 
-Conflicts Resolution:
----------------------
+Conflict Resolution:
+--------------------
 ```
 READ PATH:
 

@@ -43,7 +43,7 @@ var teabag = function(spec, my) {
   var register;  /* register(type, reduce, cb_()); */
 
   var get;       /* get(channel, type, path, cb_(err, value)); */
-  var push;      /* push(channel, type, path, op, cb_(err, value)); */
+  var push;      /* push(channel, type, path, payload, cb_(err, value)); */
 
   var on;        /* on(channel, type, path, cb_(class, value, [op])); */
 
@@ -63,6 +63,83 @@ var teabag = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### get
+  //
+  // Retrieves the value for the given channel, type and path
+  // ```
+  // @channel {string} the channel name
+  // @type    {string} the data type
+  // @path    {string} the path to retrieve
+  // @cb_     {function(err, value)} callback
+  // ```
+  get = function(channel, type, path, cb_) {
+    if(!my.init.done) {
+      my.init.callbacks.push(funtion(err) {
+        if(err) {
+          return cb_(err);
+        }
+        return get(channel, type, path, cb_);
+      });
+      return;
+    }
+
+    var c = my.table.channel(channel);
+    if(!c) {
+      return cb_(common.err('Unknown `channel`: ' + channel,
+                            'TeaBagError:UnknownChannel'));
+    }
+
+    return c.get(type, path, cb_);
+  };
+
+  // ### push
+  //
+  // Pushes an operation on the oplog for the given channel, type, path
+  // ```
+  // @channel {string} the channel name
+  // @type    {string} the data type
+  // @path    {string} the path to retrieve
+  // @payload {JSON} stringifiable JSON operation payload
+  // @cb_     {function(err, value)} callback
+  // ```
+  push = function(channel, type, path, payload, cb_) {
+    if(!my.init.done) {
+      my.init.callbacks.push(funtion(err) {
+        if(err) {
+          return cb_(err);
+        }
+        return get(channel, type, path, cb_);
+      });
+      return;
+    }
+
+    var c = my.table.channel(channel);
+    if(!c) {
+      return cb_(common.err('Unknown `channel`: ' + channel,
+                            'TeaBagError:UnknownChannel'));
+    }
+
+    var op = {
+      date: Date.now(),
+      payload: payload
+    };
+    op.sha = common.hash([ op.date.toString(),
+                           JSON.stringify(op.payload) ]);
+
+    return c.push(type, path, op, cb_);
+  };
+
+  // ### register
+  //
+  // Registers a reducer for the given type
+  // ```
+  // @type    {string} the data type
+  // @reducer {function([oplog])} a reducer function
+  // ```
+  register = function(type, reducer) {
+    my.registry[type ] = reducer;
+  };
+
   // ### init
   //
   // Initialisation function called by user or at first call on the client API.

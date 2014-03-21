@@ -206,16 +206,15 @@ var store = function(spec, my) {
         catch(err) {
           return cb_(err);
         }
-      },
-      function(cb_) {
-        /* TODO(spolu): Push operation to store. */
-        return cb_();
       }
     ], function(err) {
       if(err) {
         return cb_(err);
       }
-      return cb_(null, my.tuples[type][path].value);
+      /* We return the callback as soon as the op is pushed in memory. */
+      cb_(null, my.tuples[type][path].value);
+
+      /* TODO(spolu): Push operation to store. */
     });
   };
 
