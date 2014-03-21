@@ -49,10 +49,8 @@ var setup = function() {
   app.post('/user/:user_id/confirm',                          require('./routes/user.js').post_confirm);
 
   app.post('/user/:user_id/oplog',                            require('./routes/user.js').post_oplog);
-  /*
   app.get( '/user/:user_id/oplog',                            require('./routes/user.js').get_oplog);
-  app.get( '/user/:user_id/oplog/stream',                     require('./routes/user.js').get_oplog_stream);
-  */
+  //app.get( '/user/:user_id/oplog/stream',                     require('./routes/user.js').get_oplog_stream);
 };
 
 // INIT & START

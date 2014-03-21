@@ -1,6 +1,6 @@
 var tb = require('../index.js').teabag({
   server: 'http://localhost:3999/user/1/',
-  token: '1393843560045_1396521949271_58407c985cde6e5c0b7d039f7f137cbf4c68f383'
+  token: '1395337007694_1398015383938_d21bd569bea368c81e6393341686d8f0d5dc33af'
 });
 
 tb.init(function(err) {

@@ -96,16 +96,16 @@ var store = function(spec, my) {
       if(err) {
         handle_error(err);
       }
-      if(stream && !stream.error) {
+      if(res.statusCode === 200 && stream && !stream.error) {
         /* TODO(spolu): handle stream data. */
         return long_poll();
       }
       else {
-        var err = common.err('Store Stream Error: ' + my.strem_url,
+        var err = common.err('Store Stream Error: ' + stream_url,
                              'StoreError:StreamError');
         if(stream && stream.error) {
-          err = common.err(json.error.message,
-                           json.error.name);
+          err = common.err(stream.error.message,
+                           stream.error.name);
         }
         return handle_error(err);
       }
@@ -136,16 +136,15 @@ var store = function(spec, my) {
       var oplog_url = my.store_url + 'oplog' +
         '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
 
-      (my.json.secure ? https : http).get(oplog_url, 
-                                          function(res) {
-        res.setEncoding('utf8');
-        var body = '';
-        res.on('data', function(chunk) {
-          body += chunk;
-        });
-        res.on('end', function() {
+      request.get({
+        url: oplog_url,
+        json: true
+      }, function(err, res, oplog) {
+        if(err) {
+          return cb_(err);
+        }
+        if(Array.isArray(oplog)) {
           try {
-            var oplog = JSON.parse(body);
             my.tuples[type] = my.typles[type] || {};
             my.tuples[type][path] = {
               oplog: oplog,
@@ -156,8 +155,17 @@ var store = function(spec, my) {
           catch(err) {
             return cb_(err);
           }
-        });
-      }).on('error', cb_);
+        }
+        else {
+          var err = common.err('Store Oplog Error: ' + oplog_url,
+                               'StoreError:OplogError');
+          if(oplog && oplog.error) {
+            err = common.err(oplog.error.message,
+                             oplog.error.name);
+          }
+          return cb_(err);
+        }
+      });
     }
   };
 
@@ -169,14 +177,6 @@ var store = function(spec, my) {
   // the value is recomputed and the new oplog pushed to the store.
   //
   // The callback is returned once the store has accepted the operation.
-  //
-  // Operation structure:
-  // ```
-  // { date: 13120123913,
-  //   sha: ae7c...,
-  //   payload: { ... } }
-  // ```
-  //
   // ```
   // @type {string} the data type
   // @path {string} the path to retrieve
@@ -215,7 +215,7 @@ var store = function(spec, my) {
       if(err) {
         return cb_(err);
       }
-      return cb_(null my.tuples[type][path].value);
+      return cb_(null, my.tuples[type][path].value);
     });
   };
 

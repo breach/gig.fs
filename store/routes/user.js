@@ -17,6 +17,8 @@ var async = require('async');
 var common = require('../../lib/common.js');
 var storage = require('../../lib/storage.js').storage({});
 
+var tokens = require('../lib/tokens.js').tokens({});
+
 /******************************************************************************/
 /*                               UTILITY METHODS                              */
 /******************************************************************************/
@@ -113,10 +115,127 @@ exports.post_oplog = function(req, res, next) {
 
   var token = req.param('token');
 
-  if(typeof token !== 'string' || token.length === 0) {
-    return res.error(common.err('Invalid `token`: ' + req.param('token'),
-                                'UserError:InvalidToken'));
+  var type = req.param('type');
+  if(typeof type !== 'string' || 
+     type.indexOf('/') !== -1 || type.indexOf('.') !== -1) {
+    return res.error(common.err('Invalid `type`: ' + req.param('type'),
+                                'UserError:InvalidType'));
   }
 
+  var path = req.param('path');
+  if(typeof path !== 'string') {
+    return res.error(common.err('Invalid `path`: ' + req.param('path'),
+                                'UserError:InvalidPath'));
+    /* TODO(spolu): Need to secure that a bit more? */
+  }
 
+  var oplog = null;
+
+  async.series([
+    function(cb_) {
+      tokens.check(user_id, token, function(err, valid) {
+        if(err) {
+          return cb_(err);
+        }
+        if(!valid) {
+          return cb_(common.err('Invalid `token`: ' + req.param('token'),
+                                'UserError:InvalidToken'));
+        }
+        return cb_();
+      });
+    },
+    function(cb_) {
+      storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
+        if(err) {
+          console.log(err);
+          console.log(err.code);
+          return cb_(err);
+        }
+        oplog = json;
+        return cb_();
+      });
+    },
+    function(cb_) {
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
 };
+
+//
+// ### GET /user/:user_id/oplog
+//
+exports.get_oplog = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'UserError:InvalidUserId'));
+  }
+
+  var token = req.param('token');
+
+  async.series([
+    function(cb_) {
+      tokens.check(user_id, token, function(err, valid) {
+        if(err) {
+          return cb_(err);
+        }
+        if(!valid) {
+          return cb_(common.err('Invalid `token`: ' + req.param('token'),
+                                'UserError:InvalidToken'));
+        }
+        return cb_();
+      });
+    },
+    function(cb_) {
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
+};
+
+
+//
+// ### GET /user/:user_id/oplog/stream
+//
+exports.get_oplog_stream = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'UserError:InvalidUserId'));
+  }
+
+  var token = req.param('token');
+
+  async.series([
+    function(cb_) {
+      tokens.check(user_id, token, function(err, valid) {
+        if(err) {
+          return cb_(err);
+        }
+        if(!valid) {
+          return cb_(common.err('Invalid `token`: ' + req.param('token'),
+                                'UserError:InvalidToken'));
+        }
+        return cb_();
+      });
+    },
+    function(cb_) {
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
+};
+
