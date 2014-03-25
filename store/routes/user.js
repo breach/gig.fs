@@ -18,6 +18,7 @@ var common = require('../../lib/common.js');
 var storage = require('../../lib/storage.js').storage({});
 
 var tokens = require('../lib/tokens.js').tokens({});
+var pump = require('../lib/pump.js').pump({});
 
 /******************************************************************************/
 /*                               UTILITY METHODS                              */
@@ -282,7 +283,20 @@ exports.get_oplog_stream = function(req, res, next) {
                                 'UserError:InvalidUserId'));
   }
 
+  var reg_id = null;
+  if(req.param('reg_id')) {
+    reg_id = req.param('reg_id');
+    if(typeof reg_id != 'string') {
+      return res.error(common.err('Invalid `reg_id`: ' + req.param('reg_id'),
+                                  'UserError:InvalidRegId'));
+    }
+  }
+
   var token = req.param('token');
+  var data = {
+    reg_id: null,
+    stream: []
+  };
 
   async.series([
     function(cb_) {
@@ -298,13 +312,27 @@ exports.get_oplog_stream = function(req, res, next) {
       });
     },
     function(cb_) {
-      return cb_();
+      var closed = false;
+      res.on('close', function() {
+        closed = true;
+        return cb_();
+      });
+      pump.listen(user_id, reg_id, function(err, reg_id, stream) {
+        if(closed) return;
+        if(err) {
+          return cb_(err);
+        }
+        data.reg_id = reg_id;
+        data.stream = stream;
+        return cb_();
+      });
     }
   ], function(err) {
+    console.log('REPLYING: ' + err);
     if(err) {
       return res.error(err);
     }
-    return res.ok();
+    return res.data(data);
   });
 };
 

@@ -89,24 +89,29 @@ var store = function(spec, my) {
     var stream_url = my.store_url + 'oplog/stream' + 
       '?token=' + my.token;
 
+    if(my.reg_id) {
+      stream_url += '&reg_id=' + reg_id;
+    }
+
     my.lp_req = request.get({
       url: stream_url,
       json: true
-    }, function(err, res, stream) {
+    }, function(err, res, data) {
       my.lp_req = null;
       if(err) {
         handle_error(err);
       }
-      if(res.statusCode === 200 && stream && !stream.error) {
-        /* TODO(spolu): handle stream data. */
+      if(res.statusCode === 200 && data && !data.error) {
+        console.log(JSON.stringify(data, null, 2));
+        /* TODO(spolu): handle data. */
         return long_poll();
       }
       else {
         var err = common.err('Store Stream Error: ' + stream_url,
                              'StoreError:StreamError');
-        if(stream && stream.error) {
-          err = common.err(stream.error.message,
-                           stream.error.name);
+        if(data && data.error) {
+          err = common.err(data.error.message,
+                           data.error.name);
         }
         return handle_error(err);
       }
@@ -258,7 +263,7 @@ var store = function(spec, my) {
     }
 
     my.store_url = url_p.href;
-    //long_poll();
+    long_poll();
 
     common.log.out('STORE [' + my.id + '] Initialization');
     return cb_();

@@ -161,7 +161,7 @@ GET  {BASE_URL}/oplog
      token, path, type
 
 GET  {BASE_URL}/oplog/stream
-     token
+     token, [reg_id]
 
 Storage:
 - user's meta:   $TEABAG_DATA/:salt/:user/user.json
