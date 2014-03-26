@@ -77,6 +77,7 @@ var channel = function(spec, my) {
     var replied = false;
     Object.keys(my.stores).forEach(function(s) {
       my.stores[s].get(type, path, function(err, value) {
+        /* TODO filter out errors until no store left */
         if(!replied) {
           replied = true;
           return cb_(err, value);

@@ -156,6 +156,7 @@ exports.post_oplog = function(req, res, next) {
   }
 
   var oplog = null;
+  var noop = false;
 
   async.series([
     function(cb_) {
@@ -188,6 +189,8 @@ exports.post_oplog = function(req, res, next) {
     function(cb_) {
       for(var i = 0; i < oplog.length; i ++) {
         if(op.sha === oplog[i].sha) {
+          noop = true;
+          common.log.out('NOOP: ' + op.sha);
           return cb_();
         }
       }
@@ -200,6 +203,13 @@ exports.post_oplog = function(req, res, next) {
                          '/root/' + type + '/' + path, 
                          oplog, 
                          cb_);
+    },
+    function(cb_) {
+      /* Finally we push the operation to `pump` */
+      if(!noop) {
+        pump.push(user_id, type, path, op);
+      }
+      return cb_();
     }
   ], function(err) {
     if(err) {

@@ -75,11 +75,11 @@ var pump = function(spec, my) {
           clearTimeout(my.regs[user_id][reg_id].delay_itv);
           my.regs[user_id][reg_id].delay_itv = null;
           my.regs[user_id][reg_id].callback = null;
-          return cb_(null, reg_id, {
+          return cb_(null, reg_id, [{
             type: type,
             path: path,
             op: op
-          });
+          }]);
         }
         else {
           my.regs[user_id][reg_id].backlog.push({
@@ -93,10 +93,11 @@ var pump = function(spec, my) {
 
     /* Finally we remove all timed out registrations. */
     var now = Date.now();
-    Object.keys(my.regs[user_id]).forEach(function(user_id) {
+    Object.keys(my.regs).forEach(function(user_id) {
       Object.keys(my.regs[user_id]).forEach(function(reg_id) {
         if(!my.regs[user_id][reg_id].callback &&
            (now - my.regs[user_id][reg_id].last_seen) > my.LONG_POLL_TIMEOUT) {
+          console.log('DELETING reg: ' + reg_id);
           delete my.regs[user_id][reg_id];
         }
       });

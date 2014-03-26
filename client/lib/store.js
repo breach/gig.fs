@@ -71,7 +71,7 @@ var store = function(spec, my) {
   //
   // #### _that_
   //
-  var that = {};  
+  var that = new events.EventEmitter();
 
   /****************************************************************************/
   /* PRIVATE HELPERS */
@@ -83,6 +83,7 @@ var store = function(spec, my) {
   long_poll = function() {
     var handle_error = function(err) {
       common.log.error(err);
+      console.log('asdasd');
       my.lp_itv = setTimeout(long_poll, 1000);
     }
 
@@ -90,7 +91,7 @@ var store = function(spec, my) {
       '?token=' + my.token;
 
     if(my.reg_id) {
-      stream_url += '&reg_id=' + reg_id;
+      stream_url += '&reg_id=' + my.reg_id;
     }
 
     my.lp_req = request.get({
@@ -99,11 +100,25 @@ var store = function(spec, my) {
     }, function(err, res, data) {
       my.lp_req = null;
       if(err) {
-        handle_error(err);
+        return handle_error(err);
       }
       if(res.statusCode === 200 && data && !data.error) {
-        console.log(JSON.stringify(data, null, 2));
-        /* TODO(spolu): handle data. */
+        if(data.reg_id) {
+          my.reg_id = data.reg_id;
+        }
+        /* We push the values on the local oplog and emit an update event. */
+        /* This means that the sync & prune need not be triggered by the   */
+        /* original push as it will be triggered here.                     */
+        async.eachSeries(data.stream, function(data, cb_) {
+          /* If the op originated from this node, this push will be entirely */
+          /* cached and won't mutate the state.                              */
+          that.push(data.type, data.path, data.op, cb_);
+        }, function(err) {
+          /* The only error possible here is if the reducer failed so we just */
+          /* ignore it as there's not much we can do from here.               */
+          that.emit('update');
+        });
+
         return long_poll();
       }
       else {
@@ -190,6 +205,7 @@ var store = function(spec, my) {
   // @cb_  {function(err, value)} callback
   // ```
   push = function(type, path, op, cb_) {
+    var noop = false;
     async.series([
       function(cb_) {
         get(type, path, cb_);
@@ -198,6 +214,8 @@ var store = function(spec, my) {
         for(var i = 0; i < my.tuples[type][path].oplog.length; i ++) {
           if(op.sha === my.tuples[type][path].oplog[i].sha) {
             /* We found the operation so there's nothing to do here. Move on. */
+            noop = true;
+            common.log.out('NOOP: ' + op.sha);
             return cb_();
           }
         }
@@ -222,27 +240,29 @@ var store = function(spec, my) {
       /* We return the callback as soon as the op is pushed in memory. */
       cb_(null, my.tuples[type][path].value);
 
-      var oplog_url = my.store_url + 'oplog' +
-        '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
+      if(!noop) {
+        var oplog_url = my.store_url + 'oplog' +
+          '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
 
-      request.post({
-        url: oplog_url,
-        json: op
-      }, function(err, res, json) {
-        /* We can't provide feedback here but we'll print errors. */
-        if(err) {
-          common.log.error(err);
-        }
-        if(res.statusCode !== 200 || !json.ok) {
-          var err = common.err('Store Oplog Error: ' + oplog_url,
-                               'StoreError:OplogError');
-          if(json && json.error) {
-            err = common.err(json.error.message,
-                             json.error.name);
+        request.post({
+          url: oplog_url,
+          json: op
+        }, function(err, res, json) {
+          /* We can't provide feedback here but we'll print errors. */
+          if(err) {
+            common.log.error(err);
           }
-          common.log.error(err);
-        }
-      });
+          if(res.statusCode !== 200 || !json.ok) {
+            var err = common.err('Store Oplog Error: ' + oplog_url,
+                                 'StoreError:OplogError');
+            if(json && json.error) {
+              err = common.err(json.error.message,
+                               json.error.name);
+            }
+            common.log.error(err);
+          }
+        });
+      }
     });
   };
 
