@@ -41,6 +41,7 @@ var common = require('../../lib/common.js');
 //
 // ```
 // @spec { id, json, token, registry }
+// @emits 'update'
 // ```
 var store = function(spec, my) {
   my = my || {};

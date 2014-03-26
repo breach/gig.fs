@@ -77,7 +77,7 @@ var channel = function(spec, my) {
     var replied = false;
     Object.keys(my.stores).forEach(function(s) {
       my.stores[s].get(type, path, function(err, value) {
-        /* TODO filter out errors until no store left */
+        /* TODO(spolu): filter out errors until no store left */
         if(!replied) {
           replied = true;
           return cb_(err, value);
@@ -128,6 +128,7 @@ var channel = function(spec, my) {
         registry: my.registry
       });
       my.stores[s].init(cb_);
+      /* TODO(spolu): listen for `update` events and initiate sync & prune. */
     }, cb_);
   };
 
