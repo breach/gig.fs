@@ -1,0 +1,6 @@
+curl -XPUT 'http://localhost:3999/admin/user/1/master/foobar' -u admin:XX
+curl -XPUT 'http://localhost:3998/admin/user/1' -u admin:YY
+curl -XGET 'http://localhost:3998/admin/user/1/code' -u admin:YY
+
+curl -XGET 'http://localhost:3999/user/1/token?master=foobar&expiry=1398385340468'
+curl -XPOST 'http://localhost:3999/user/1/table/test/store?master=foobar' -H "Content-Type: application/json" -d '{"store_url":"http://localhost:3998/user/1/", "code":"1395793632350_1395793752350_f03c5c899488aa69f82b716db85a947c00dcd3a5"}'
