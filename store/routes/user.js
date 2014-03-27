@@ -187,17 +187,32 @@ exports.post_oplog = function(req, res, next) {
       });
     },
     function(cb_) {
+      /* NOOP Detection */
       for(var i = 0; i < oplog.length; i ++) {
-        if(op.sha === oplog[i].sha) {
+        if(op.sha === oplog[i].sha ||
+           (oplog[i].value && oplog[i].date > op.date)) {
           noop = true;
           common.log.out('NOOP: ' + op.sha);
           return cb_();
         }
       }
+      /* Insertion / Sorting */
       oplog.push(op);
       oplog.sort(function(o1, o2) {
         return o1.date - o2.date;
       });
+      /* Pruning */
+      var i = 0;
+      for(i = oplog.length - 1; i >= 0; i--) {
+        if(oplog[i].value && i > 0) {
+          break
+        }
+      }
+      if(i > 0) {
+        common.log.out('PRUNING: ' + oplog[i].sha + 
+                       ' '  + i + ' / ' + oplog.length);
+        oplog.splice(0, i);
+      }
 
       return storage.put(user_id, 
                          '/root/' + type + '/' + path, 

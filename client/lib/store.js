@@ -117,7 +117,6 @@ var store = function(spec, my) {
         }, function(err) {
           /* The only error possible here is if the reducer failed so we just */
           /* ignore it as there's not much we can do from here.               */
-          that.emit('update');
         });
 
         return long_poll();
@@ -212,18 +211,33 @@ var store = function(spec, my) {
         get(type, path, cb_);
       },
       function(cb_) {
+        /* NOOP Detection */
         for(var i = 0; i < my.tuples[type][path].oplog.length; i ++) {
-          if(op.sha === my.tuples[type][path].oplog[i].sha) {
-            /* We found the operation so there's nothing to do here. Move on. */
+          if(op.sha === my.tuples[type][path].oplog[i].sha ||
+             (my.tuples[type][path].oplog[i].value &&
+              my.tuples[type][path].oplog[i].date > op.date)) {
             noop = true;
             common.log.out('NOOP: ' + op.sha);
             return cb_();
           }
         }
+        /* Insertion / Sorting */
         my.tuples[type][path].oplog.push(op);
         my.tuples[type][path].oplog.sort(function(o1, o2) {
           return o1.date - o2.date;
         });
+        /* Pruning */
+        var i = 0;
+        for(i = my.tuples[type][path].oplog.length - 1; i >= 0; i--) {
+          if(my.tuples[type][path].oplog[i].value && i > 0) {
+            break
+          }
+        }
+        if(i > 0) {
+          common.log.out('PRUNING: ' + my.tuples[type][path].oplog[i].sha + 
+                         ' '  + i + ' / ' + my.tuples[type][path].oplog.length);
+          my.tuples[type][path].oplog.splice(0, i);
+        }
 
         try {
           my.tuples[type][path].value = 
@@ -242,6 +256,9 @@ var store = function(spec, my) {
       cb_(null, my.tuples[type][path].value);
 
       if(!noop) {
+        /* This is not a NOOP so we emit an update event for syncpruning. */
+        that.emit('update', type, path);
+
         var oplog_url = my.store_url + 'oplog' +
           '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
 

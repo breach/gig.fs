@@ -51,6 +51,7 @@ var channel = function(spec, my) {
   //
   // #### _private_
   //
+  var syncprune; /* syncprune(type, path); */
   
   //
   // #### _that_
@@ -60,6 +61,18 @@ var channel = function(spec, my) {
   /****************************************************************************/
   /* PRIVATE HELPERS */
   /****************************************************************************/
+  // ### syncprune
+  //
+  // Sync the different stores for that channel and attemps a pruning operation
+  // if applicable and no syncing is required.
+  // ```
+  // @type {string} the data type
+  // @path {string} the path to retrieve
+  // ```
+  syncprune = function(type, path) {
+    common.log.out('SYNCPRUNE: ' + type + ' ' + path);
+    /* TODO(spolu): Implement. */
+  };
 
   /****************************************************************************/
   /* PUBLIC METHODS */
@@ -128,7 +141,8 @@ var channel = function(spec, my) {
         registry: my.registry
       });
       my.stores[s].init(cb_);
-      /* TODO(spolu): listen for `update` events and initiate sync & prune. */
+      /* Syncpruning trigger. */
+      my.stores[s].on('update', syncprune);
     }, cb_);
   };
 
