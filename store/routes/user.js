@@ -155,10 +155,19 @@ exports.post_oplog = function(req, res, next) {
                                 'UserError:InvalidOpBody'));
   }
 
+  common.log.out('RECEIVING: ' + JSON.stringify(op));
+
   var oplog = null;
   var noop = false;
+  var release = null;
 
   async.series([
+    function(cb_) {
+      storage.lock(user_id, '/root/' + type + '/' + path, function(rel_) {
+        release = rel_;
+        return cb_();
+      });
+    },
     function(cb_) {
       tokens.check(user_id, token, function(err, valid) {
         if(err) {
@@ -225,6 +234,10 @@ exports.post_oplog = function(req, res, next) {
         pump.push(user_id, type, path, op);
       }
       return cb_();
+    },
+    function(cb_) {
+      release();
+      return cb_();
     }
   ], function(err) {
     if(err) {
@@ -260,8 +273,15 @@ exports.get_oplog = function(req, res, next) {
   }
 
   var oplog = [];
+  var release = null;
 
   async.series([
+    function(cb_) {
+      storage.lock(user_id, '/root/' + type + '/' + path, function(rel_) {
+        release = rel_;
+        return cb_();
+      });
+    },
     function(cb_) {
       tokens.check(user_id, token, function(err, valid) {
         if(err) {
@@ -288,6 +308,10 @@ exports.get_oplog = function(req, res, next) {
         oplog = json;
         return cb_();
       });
+    },
+    function(cb_) {
+      release();
+      return cb_();
     }
   ], function(err) {
     if(err) {
@@ -353,7 +377,6 @@ exports.get_oplog_stream = function(req, res, next) {
       });
     }
   ], function(err) {
-    console.log('REPLYING: ' + err);
     if(err) {
       return res.error(err);
     }

@@ -73,14 +73,12 @@ var channel = function(spec, my) {
   syncprune = function(type, path) {
     common.log.out('SYNCPRUNE: ' + type + ' ' + path);
     var synced = false;
-    var oplog = [];
+    var oplogs = {};
+    var values = {};
     async.series([
       function(cb_) {
         /* SYNCING */
-        if(Object.keys(my.stores).length <= 1) {
-          return cb_();
-        }
-        var oplogs = {};
+        common.log.out('SYNC: ' + type + ' ' + path);
         async.each(Object.keys(my.stores), function(s, cb_) {
           my.stores[s].get(type, path, function(err, value, oplog) {
             if(err) {
@@ -92,18 +90,70 @@ var channel = function(spec, my) {
             return cb_();
           });
         }, function() {
-          /* TODO(spolu): Syncing */
-          synced = true;
-          return cb_();
+          async.each(Object.keys(oplogs), function(dst, cb_) {
+            async.each(Object.keys(oplogs), function(src, cb_) {
+              async.each(oplogs[src], function(op, cb_) {
+                my.stores[dst].push(type, path, op, function(err, value, noop) {
+                  if(err) {
+                    common.log.error(err);
+                  }
+                  else {
+                    if(!noop) {
+                      synced = true;
+                    }
+                    values[dst] = value;
+                  }
+                  return cb_();
+                });
+              }, cb_);
+            }, cb_);
+          }, cb_);
         });
       },
       function(cb_) {
-        if(Object.keys(my.stores).length <= 1 || 
-           synced || 
-           oplog.length <= 1) {
+        /* PRUNING */
+        if(synced) {
           return cb_();
         }
-        /* PRUNING */
+        var length = null;
+        Object.keys(oplogs).forEach(function(s) {
+          if(!length) {
+            length = oplogs[s].length;
+            console.log(length);
+          }
+          else if(oplogs[s].length !== length) {
+            return cb_(common.err('Oplog length mismatch at pruning : ' + 
+                                  '[' + type + '] ' + path,
+                                  'ChannelError:OplogLengthMismatch'));
+          }
+        });
+        if(length <= 1) {
+          return cb_();
+        }
+        common.log.out('PRUNE: ' + type + ' ' + path);
+        var value = null;
+        var hv = '';
+        Object.keys(values).forEach(function(s) {
+          if(!value) {
+            value = values[s];
+            hv = common.hash([JSON.stringify(value)]);
+          }
+          else if(common.hash([JSON.stringify(values[s])]) !== hv) {
+            return cb_(common.err('Values mismatch at pruning : ' + 
+                                  '[' + type + '] ' + path,
+                                  'ChannelError:ValuesMismatch'));
+          }
+        });
+        var op = {
+          date: Date.now(),
+          value: value
+        }
+        op.sha = common.hash([ op.date.toString(),
+                               JSON.stringify(op.value) ]);
+        console.log('PUSHING: ' + op.sha);
+        async.each(Object.keys(my.stores), function(s, cb_) {
+          my.stores[s].push(type, path, op, cb_);
+        }, cb_);
       }
     ], function(err) {
       if(err) {
@@ -212,7 +262,9 @@ var channel = function(spec, my) {
           that.emit('update', type, path, value);
         }
         /* Syncpruning trigger. */
-        syncprune(type, path);
+        process.nextTick(function() {
+          syncprune(type, path);
+        });
       });
     }, cb_);
   };

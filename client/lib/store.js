@@ -205,7 +205,7 @@ var store = function(spec, my) {
   // @type {string} the data type
   // @path {string} the path to retrieve
   // @op   {object} the operation to push on the oplog
-  // @cb_  {function(err, value)} callback
+  // @cb_  {function(err, value, noop)} callback
   // ```
   push = function(type, path, op, cb_) {
     var noop = false;
@@ -256,7 +256,7 @@ var store = function(spec, my) {
         return cb_(err);
       }
       /* We return the callback as soon as the op is pushed in memory. */
-      cb_(null, my.tuples[type][path].value);
+      cb_(null, my.tuples[type][path].value, noop);
 
       if(!noop) {
         /* This is not a NOOP so we emit an mutate event for syncpruning. */
