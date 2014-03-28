@@ -72,7 +72,44 @@ var channel = function(spec, my) {
   // ```
   syncprune = function(type, path) {
     common.log.out('SYNCPRUNE: ' + type + ' ' + path);
-    /* TODO(spolu): Implement. */
+    var synced = false;
+    var oplog = [];
+    async.series([
+      function(cb_) {
+        /* SYNCING */
+        if(Object.keys(my.stores).length <= 1) {
+          return cb_();
+        }
+        var oplogs = {};
+        async.each(Object.keys(my.stores), function(s, cb_) {
+          my.stores[s].get(type, path, function(err, value, oplog) {
+            if(err) {
+              common.log.error(err);
+            }
+            else {
+              oplogs[s] = oplog;
+            }
+            return cb_();
+          });
+        }, function() {
+          /* TODO(spolu): Syncing */
+          synced = true;
+          return cb_();
+        });
+      },
+      function(cb_) {
+        if(Object.keys(my.stores).length <= 1 || 
+           synced || 
+           oplog.length <= 1) {
+          return cb_();
+        }
+        /* PRUNING */
+      }
+    ], function(err) {
+      if(err) {
+        common.log.error(err);
+      }
+    });
   };
 
   /****************************************************************************/
@@ -92,9 +129,12 @@ var channel = function(spec, my) {
     var replied = false;
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].get(type, path, function(err, value) {
+        if(err) {
+          common.log.error(err);
+        }
         if(!err && !replied) {
           replied = true;
-          my.state[htp] = factory.hash([JSON.stringify(value)]);
+          my.state[htp] = common.hash([JSON.stringify(value)]);
           cb_(null, value);
         }
         return scb_();
@@ -125,9 +165,12 @@ var channel = function(spec, my) {
     var replied = false;
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].push(type, path, op, function(err, value) {
+        if(err) {
+          common.log.error(err);
+        }
         if(!err && !replied) {
           replied = true;
-          my.state[htp] = factory.hash([JSON.stringify(value)]);
+          my.state[htp] = common.hash([JSON.stringify(value)]);
           cb_(null, value);
         }
         return scb_();
@@ -162,9 +205,10 @@ var channel = function(spec, my) {
       my.stores[s].on('mutate', function(type, path, value) {
         /* State update trigger. */
         var htp = common.hash([type, path]);
-        var hv = common.hash(JSON.stringify(value));
+        var hv = common.hash([JSON.stringify(value)]);
         if(my.state[htp] !== hv) {
           my.state[htp] = hv;
+          common.log.out('UPDATE: [' + type + '] ' + path + ' ' + hv);
           that.emit('update', type, path, value);
         }
         /* Syncpruning trigger. */

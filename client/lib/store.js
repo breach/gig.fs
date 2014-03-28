@@ -84,7 +84,6 @@ var store = function(spec, my) {
   long_poll = function() {
     var handle_error = function(err) {
       common.log.error(err);
-      console.log('asdasd');
       my.lp_itv = setTimeout(long_poll, 1000);
     }
 
@@ -143,7 +142,7 @@ var store = function(spec, my) {
   // ```
   // @type {string} the data type
   // @path {string} the path to retrieve
-  // @cb_  {function(err, value)} callback
+  // @cb_  {function(err, value, oplog)} callback
   // ```
   get = function(type, path, cb_) {
     if(!my.registry[type]) {
@@ -151,7 +150,9 @@ var store = function(spec, my) {
                             'StoreError:TypeNotRegistered'));
     }
     if(my.tuples[type] && my.tuples[type][path]) {
-      return cb_(null, my.tuples[type][path].value);
+      return cb_(null, 
+                 my.tuples[type][path].value,
+                 my.tuples[type][path].oplog);
     }
     else {
       var oplog_url = my.store_url + 'oplog' +
@@ -171,7 +172,9 @@ var store = function(spec, my) {
               oplog: oplog,
               value: my.registry[type](oplog)
             };
-            return cb_(null, my.tuples[type][path].value);
+            return cb_(null, 
+                       my.tuples[type][path].value,
+                       my.tuples[type][path].oplog);
           }
           catch(err) {
             return cb_(err);
