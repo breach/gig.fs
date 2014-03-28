@@ -41,7 +41,7 @@ var common = require('../../lib/common.js');
 //
 // ```
 // @spec { id, json, token, registry }
-// @emits 'update'
+// @emits 'mutate'
 // ```
 var store = function(spec, my) {
   my = my || {};
@@ -122,7 +122,7 @@ var store = function(spec, my) {
         return long_poll();
       }
       else {
-        var err = common.err('Store Stream Error: ' + stream_url,
+        var err = common.err('Store stream error: ' + stream_url,
                              'StoreError:StreamError');
         if(data && data.error) {
           err = common.err(data.error.message,
@@ -178,7 +178,7 @@ var store = function(spec, my) {
           }
         }
         else {
-          var err = common.err('Store Oplog Error: ' + oplog_url,
+          var err = common.err('Store oplog error: ' + oplog_url,
                                'StoreError:OplogError');
           if(oplog && oplog.error) {
             err = common.err(oplog.error.message,
@@ -256,8 +256,8 @@ var store = function(spec, my) {
       cb_(null, my.tuples[type][path].value);
 
       if(!noop) {
-        /* This is not a NOOP so we emit an update event for syncpruning. */
-        that.emit('update', type, path);
+        /* This is not a NOOP so we emit an mutate event for syncpruning. */
+        that.emit('mutate', type, path, my.tuples[type][path].value);
 
         var oplog_url = my.store_url + 'oplog' +
           '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
@@ -271,7 +271,7 @@ var store = function(spec, my) {
             common.log.error(err);
           }
           if(res.statusCode !== 200 || !json.ok) {
-            var err = common.err('Store Oplog Error: ' + oplog_url,
+            var err = common.err('Store oplog error: ' + oplog_url,
                                  'StoreError:OplogError');
             if(json && json.error) {
               err = common.err(json.error.message,

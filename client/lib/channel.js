@@ -39,6 +39,7 @@ var channel = function(spec, my) {
   my.registry = spec.registry;
 
   my.stores = {};
+  my.state = {};
 
   //
   // _public_
@@ -56,7 +57,7 @@ var channel = function(spec, my) {
   //
   // #### _that_
   //
-  var that = {};  
+  var that = new events.EventEmitter();
 
   /****************************************************************************/
   /* PRIVATE HELPERS */
@@ -80,30 +81,39 @@ var channel = function(spec, my) {
   // ### get
   //
   // Retrieves a value for this channel. See README for the conflict resolution
-  // model.
+  // model. We reply as soon as a value is received.
   // ```
   // @type {string} the data type
   // @path {string} the path to retrieve
   // @cb_  {function(err, value)} callback
   // ```
   get = function(type, path, cb_) {
+    var htp = common.hash([type, path]);
     var replied = false;
-    Object.keys(my.stores).forEach(function(s) {
+    async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].get(type, path, function(err, value) {
-        /* TODO(spolu): filter out errors until no store left */
-        if(!replied) {
+        if(!err && !replied) {
           replied = true;
-          return cb_(err, value);
+          my.state[htp] = factory.hash([JSON.stringify(value)]);
+          cb_(null, value);
         }
-        /* NOP. */
+        return scb_();
       });
+    }, function(err) {
+      if(!replied) {
+        cb_(common.err('All stores failed: [' + type + '] ' + path,
+                       'ChannelError:AllStoresFailed'));
+      }
+      else {
+        syncprune(type, path);
+      }
     });
   };
 
   // ### push
   //
   // Pushes an operation on the oplog. See README for the conflict resolution
-  // model.
+  // model. We reply as soon as the value was accepted by one store.
   // ```
   // @type {string} the data type
   // @path {string} the path to push to
@@ -111,15 +121,22 @@ var channel = function(spec, my) {
   // @cb_  {function(err, value)} callback
   // ```
   push = function(type, path, op, cb_) {
+    var htp = common.hash([type, path]);
     var replied = false;
-    Object.keys(my.stores).forEach(function(s) {
+    async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].push(type, path, op, function(err, value) {
-        if(!replied) {
+        if(!err && !replied) {
           replied = true;
-          return cb_(err, value);
+          my.state[htp] = factory.hash([JSON.stringify(value)]);
+          cb_(null, value);
         }
-        /* NOP. */
+        return scb_();
       });
+    }, function(err) {
+      if(!replied) {
+        cb_(common.err('All stores failed: [' + type + '] ' + path,
+                       'ChannelError:AllStoresFailed'));
+      }
     });
   };
 
@@ -141,8 +158,18 @@ var channel = function(spec, my) {
         registry: my.registry
       });
       my.stores[s].init(cb_);
-      /* Syncpruning trigger. */
-      my.stores[s].on('update', syncprune);
+
+      my.stores[s].on('mutate', function(type, path, value) {
+        /* State update trigger. */
+        var htp = common.hash([type, path]);
+        var hv = common.hash(JSON.stringify(value));
+        if(my.state[htp] !== hv) {
+          my.state[htp] = hv;
+          that.emit('update', type, path, value);
+        }
+        /* Syncpruning trigger. */
+        syncprune(type, path);
+      });
     }, cb_);
   };
 
