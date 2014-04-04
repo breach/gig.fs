@@ -20,8 +20,8 @@ tb2.init(function(err) {
 */
 
 var tb1 = require('../index.js').teabag({
-  server: 'http://localhost:3999/user/1/',
-  token: '1395337007694_1398015383938_d21bd569bea368c81e6393341686d8f0d5dc33af'
+  server: 'http://alpha.breach.cc:3999/user/1/',
+  token: '1396113458843_1403889455037_40c3aaccae61e210ae51a1921023dfdd9a8d2491'
 });
 var common = require('../../lib/common.js');
 
