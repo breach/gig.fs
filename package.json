@@ -4,8 +4,8 @@
   "dependencies": {
     "async": "0.2.x",
     "mkdirp": "0.3.x",
-    "request": "2.34.x"
+    "request": "2.34.x",
+    "rimraf": "~2.2.6"
   },
   "repository": "git://github.com/breach/teabag"
 }
-

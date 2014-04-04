@@ -22,20 +22,19 @@ var access = require('../lib/access.js').access({});
 
 var setup = function() {
   /* App Configuration */
+  if(process.env['TEABAG_STORE_KEY']) {
+    common.KEY = process.env['TEABAG_STORE_KEY'];
+    common.log.out('[KEY]: ' + common.KEY);
+  }
+
   app.configure(function() {
+    app.use('/admin', express.basicAuth('admin', common.KEY)); 
     app.use(express.bodyParser());
     app.use(express.methodOverride());
     app.use(access.verify);
     app.use(app.router);
     app.use(access.error);
   });
-
-  if(process.env['TEABAG_STORE_KEY']) {
-    common.KEY = process.env['TEABAG_STORE_KEY'];
-    common.log.out('[KEY]: ' + common.KEY);
-  }
-
-  app.use('/admin', express.basicAuth('admin', common.KEY)); 
 
   //
   // #### _JSON ROUTES_
@@ -54,12 +53,26 @@ var setup = function() {
 };
 
 // INIT & START
-common.log.out('TeaBag: teabag_store [Started]');
+common.log.out('teabag_store [Started]');
 
 /* Setup */
 setup();
-var http_srv = http.createServer(app).listen(3998);
-common.log.out('HTTP Server started on port: 3998');
+
+common.PORT = process.env['TEABAG_STORE_PORT'] ?
+  parseInt(process.env['TEABAG_STORE_PORT'], 10) : 0;
+
+var http_srv = http.createServer(app).listen(common.PORT);
+
+http_srv.on('listening', function() {
+  common.PORT = http_srv.address().port;
+  common.log.out('[STORE_PORT]: ' + common.PORT);
+
+  if(process.send) {
+    process.send({ type: 'listening',
+                   port: common.PORT });
+  }
+});
+
 
 // SAFETY NET (kills the process and the spawns)
 process.on('uncaughtException', function (err) {
