@@ -1,0 +1,20 @@
+/******************************************************************************/
+/* TODO */
+/******************************************************************************/
+
+>>>v0.x<<<
+
+TODO(spolu): Remove client/test
+TODO(spolu): Write more tests
+TODO(spolu): Add table API to client
+TODO(spolu): Move to Session-Token / Session-Device-Token
+TODO(spolu): Add Revocation API to table
+TODO(spolu): Add Revocation API to client
+
+DONE: 
+
+>>v0.2<<
+
+/******************************************************************************/
+/* NOTES(spolu) */
+/******************************************************************************/
