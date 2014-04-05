@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-04 spolu   Add `kill` method
  * - 2014-02-28 spolu   Creation
  */
 "use strict";
@@ -40,6 +41,8 @@ var teabag = function(spec, my) {
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var kill;      /* kill(cb_()); */
+
   var register;  /* register(type, reduce, cb_()); */
 
   var get;       /* get(channel, type, path, cb_(err, value)); */
@@ -48,6 +51,7 @@ var teabag = function(spec, my) {
   var on;        /* on(channel, type, path, cb_(class, value, [op])); */
 
   var channels;  /* channels(); */
+  var channel;   /* channel(); */
 
   //
   // #### _private_
@@ -71,6 +75,17 @@ var teabag = function(spec, my) {
   channels = function() {
     if(!my.table) return [];
     return my.table.channels();
+  };
+
+  // ### channel
+  //
+  // Returns the channel object for the requested channel (proxied to table)
+  // ```
+  // @channel {string} the channel name
+  // ```
+  channel = function(channel) {
+    if(!my.table) return null;
+    return my.table.channel(channel);
   };
 
   // ### get
@@ -190,9 +205,31 @@ var teabag = function(spec, my) {
     });
   };
 
+  // ### kill
+  //
+  // Cleans-up and terminates this client (and all long-poll connections)
+  //
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  kill = function(cb_) {
+    if(my.table) {
+      async.series([
+                   my.table.kill
+      ], cb_);
+    }
+    else {
+      return cb_();
+    }
+  };
+
+
   common.method(that, 'channels', channels, _super);
+  common.method(that, 'channel', channel, _super);
 
   common.method(that, 'init', init, _super);
+  common.method(that, 'kill', kill, _super);
+
   common.method(that, 'register', register, _super);
 
   common.method(that, 'get', get, _super);

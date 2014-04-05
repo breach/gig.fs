@@ -291,8 +291,8 @@ exports.get_channel = function(req, res, next) {
                                 'TableError:MissingCredentials'));
   }
   
-  var channel = req.param('channel');
-  if(typeof channel !== 'string' || channel.length === 0) {
+  var ch = req.param('channel');
+  if(typeof ch !== 'string' || ch.length === 0) {
     return res.error(common.err('Invalid `channel`: ' + req.param('channel'),
                                 'TableError:InvalidChannel'));
   }
@@ -320,12 +320,12 @@ exports.get_channel = function(req, res, next) {
       }
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(user_id, 'table.json', function(err, t) {
         if(err) {
           return cb_(err);
         }
-        if(table[channel]) {
-          channel = table[channel];
+        if(t[ch]) {
+          channel = t[ch];
         }
         return cb_();
       });

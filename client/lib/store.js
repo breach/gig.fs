@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-04 spolu   Add `kill` method
  * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-05 spolu   Creation (on a plane!)
  */
@@ -56,13 +57,18 @@ var store = function(spec, my) {
 
   my.tuples = {};
 
+  my.killed = false;
+
   //
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var kill;      /* kill(cb_()); */
 
   var get;       /* get(type, path, cb_); */
   var push;      /* push(type, path, op, cb_(err, value)); */
+
+  var url;       /* url(); */
 
   //
   // #### _private_ 
@@ -82,6 +88,9 @@ var store = function(spec, my) {
   // Runs the long polling on the store oplog stream endpoint. The long polling
   // is resilient to network errors
   long_poll = function() {
+    if(my.killed)
+      return;
+
     var handle_error = function(err) {
       common.log.error(err);
       my.lp_itv = setTimeout(long_poll, 1000);
@@ -135,6 +144,14 @@ var store = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### url
+  //
+  // Returns the store url
+  url = function() {
+    return my.json.url || null;
+  };
+
+
   // ### get
   //
   // Retrieves a value from the store and starts keeping the associated oplog
@@ -306,11 +323,36 @@ var store = function(spec, my) {
     my.store_url = url_p.href;
     long_poll();
 
-    common.log.out('STORE [' + my.id + '] Initialization');
+    common.log.debug('STORE [' + my.id + '] Initialization');
     return cb_();
   };
 
+  // ### kill
+  //
+  // Cleans-up and terminates this store (and all long-poll connections)
+  //
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  kill = function(cb_) {
+    that.removeAllListeners();
+    my.killed = true;
+    if(my.lp_req) {
+      my.lp_req.abort();
+      my.lp_req = null;
+    }
+    if(my.lp_itv) {
+      clearTimeout(my.lp_itv);
+      my.lp_itv = null;
+    }
+    return cb_();
+  };
+
+
+  common.method(that, 'url', url, _super);
+
   common.method(that, 'init', init, _super);
+  common.method(that, 'kill', kill, _super);
 
   common.method(that, 'get', get, _super);
   common.method(that, 'push', push, _super);

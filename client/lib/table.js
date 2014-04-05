@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-04 spolu   Add `kill` method
  * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-01 spolu   Creation
  */
@@ -48,6 +49,7 @@ var table = function(spec, my) {
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var kill;      /* kill(cb_()); */
 
   var channel;   /* channel(channel); */
   var channels;  /* channels(); */
@@ -139,10 +141,24 @@ var table = function(spec, my) {
     ], cb_);
   };
 
+  // ### kill
+  //
+  // Cleans-up and terminates this table (and all long-poll connections)
+  //
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  kill = function(cb_) {
+    async.each(Object.keys(my.channels), function(c, cb_) {
+      my.channels[c].kill(cb_);
+    }, cb_);
+  };
+
   common.method(that, 'channel', channel, _super);
   common.method(that, 'channels', channels, _super);
 
   common.method(that, 'init', init, _super);
+  common.method(that, 'kill', kill, _super);
 
   return that;
 };

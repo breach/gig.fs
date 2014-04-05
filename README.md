@@ -106,6 +106,7 @@ PUT  /user/:user_id/master/:master                     // revoke all tokens
 GET  /user/:user_id/token
      master, expiry, description
 GET  /user/:user_id/token/all
+     master
 DEL  /user/:user_id/token/:token
 GET  /user/:user_id/token/:token/check
 

@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-04 spolu   Add `kill` method
  * - 2014-03-05 spolu   Creation (on a plane!)
  */
 "use strict";
@@ -41,13 +42,19 @@ var channel = function(spec, my) {
   my.stores = {};
   my.state = {};
 
+  my.killed = false;
+
   //
   // _public_
   // 
   var init;      /* init(cb_()); */
+  var kill;      /* kill(cb_()); */
 
   var get;       /* get(type, path, cb_(err, value)); */
   var push;      /* push(type, path, op, cb_(err, value)); */
+
+  var store;     /* store(id); */
+  var stores;    /* stores(); */
 
   //
   // #### _private_
@@ -71,6 +78,9 @@ var channel = function(spec, my) {
   // @path {string} the path to retrieve
   // ```
   syncprune = function(type, path) {
+    if(my.killed)
+      return;
+
     common.log.out('SYNCPRUNE: ' + type + ' ' + path);
     var synced = false;
     var oplogs = {};
@@ -165,6 +175,23 @@ var channel = function(spec, my) {
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
+  // ### store
+  //
+  // Returns the store object for the requested store
+  // ```
+  // @channel {string} the channel name
+  // ```
+  store = function(id) {
+    return (my.stores[id] || null);
+  };
+
+  // ### stores
+  //
+  // Returns the list of available stores ids
+  stores = function() {
+    return Object.keys(my.stores);
+  };
+
   // ### get
   //
   // Retrieves a value for this channel. See README for the conflict resolution
@@ -180,6 +207,9 @@ var channel = function(spec, my) {
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].get(type, path, function(err, value) {
         if(err) {
+          if(err.name === 'StoreError:TypeNotRegistered') {
+            return scb_(err);
+          }
           common.log.error(err);
         }
         if(!err && !replied) {
@@ -191,8 +221,11 @@ var channel = function(spec, my) {
       });
     }, function(err) {
       if(!replied) {
-        cb_(common.err('All stores failed: [' + type + '] ' + path,
-                       'ChannelError:AllStoresFailed'));
+        if(err) {
+          return cb_(err);
+        }
+        return cb_(common.err('All stores failed: [' + type + '] ' + path,
+                              'ChannelError:AllStoresFailed'));
       }
       else {
         syncprune(type, path);
@@ -216,6 +249,9 @@ var channel = function(spec, my) {
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].push(type, path, op, function(err, value) {
         if(err) {
+          if(err.name === 'StoreError:TypeNotRegistered') {
+            return scb_(err);
+          }
           common.log.error(err);
         }
         if(!err && !replied) {
@@ -227,8 +263,11 @@ var channel = function(spec, my) {
       });
     }, function(err) {
       if(!replied) {
-        cb_(common.err('All stores failed: [' + type + '] ' + path,
-                       'ChannelError:AllStoresFailed'));
+        if(err) {
+          return cb_(err);
+        }
+        return cb_(common.err('All stores failed: [' + type + '] ' + path,
+                              'ChannelError:AllStoresFailed'));
       }
     });
   };
@@ -242,7 +281,8 @@ var channel = function(spec, my) {
   // @cb_ {function(err)}
   // ```
   init = function(cb_) {
-    common.log.out('CHANNEL [' + my.name + '] Initialization');
+    common.log.debug('CHANNEL [' + my.name + '] Initialization');
+
     async.each(Object.keys(my.json), function(s, cb_) {
       my.stores[s] = require('./store.js').store({
         id: s,
@@ -269,7 +309,27 @@ var channel = function(spec, my) {
     }, cb_);
   };
 
+  // ### kill
+  //
+  // Cleans-up and terminates this channell (and all long-poll connections)
+  //
+  // ```
+  // @cb_ {function(err)}
+  // ```
+  kill = function(cb_) {
+    that.removeAllListeners();
+    my.killed = true;
+    async.each(Object.keys(my.stores), function(s, cb_) {
+      my.stores[s].kill(cb_);
+    }, cb_);
+  };
+
+
+  common.method(that, 'store', store, _super);
+  common.method(that, 'stores', stores, _super);
+
   common.method(that, 'init', init, _super);
+  common.method(that, 'kill', kill, _super);
 
   common.method(that, 'get', get, _super);
   common.method(that, 'push', push, _super);

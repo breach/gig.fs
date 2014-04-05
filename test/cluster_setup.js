@@ -4,20 +4,29 @@ var path = require('path');
 var request = require('request');
 var rimraf = require('rimraf');
 
-var my = {
-  procs: []
+var my = {};
+
+exports.clusterInternal = function() {
+  return my;
 };
 
 exports.clusterSetUp = function(store_count, cb_) {
-
-  my.user = {
-    master: 'foobar',
-    stream: 'test'
+  my = {
+    user: {},
+    table: {},
+    stores: [],
+    procs: []
   };
 
-  my.stores = [];
+  my.user = {
+    id: 1,
+    master: 'foobar',
+    channel: 'test'
+  };
+
   for(var i = 0; i < store_count; i ++) {
     my.stores[i] = {
+      url: 'http://localhost:' + (4001 + i) + '/user/' + my.user.id + '/',
       port: 4001 + i,
       key: 'teabag_store_test_key_' + i,
       data_path: path.join(__dirname, 'TEABAG_DATA_TEST_STORE_' + i)
@@ -25,6 +34,7 @@ exports.clusterSetUp = function(store_count, cb_) {
   }
 
   my.table = {
+    url: 'http://localhost:4000/user/' + my.user.id + '/',
     port: 4000,
     key: 'teabag_table_test_key',
     data_path: path.join(__dirname, 'TEABAG_DATA_TEST_TABLE')
@@ -76,8 +86,9 @@ exports.clusterSetUp = function(store_count, cb_) {
     function(cb_) {
       async.parallel([
         function(cb_) {
-          var t_url = 'http://localhost:' + my.table.port + '/admin/user/1/master/' + my.user.master;
-          console.log('>>>> ' + t_url);
+          var t_url = 'http://localhost:' + my.table.port + '/admin/user/' + 
+                      my.user.id + '/master/' + my.user.master;
+          //console.log('>>>> ' + t_url);
           request.put(t_url, {
             auth: {
               user: 'admin',
@@ -87,8 +98,8 @@ exports.clusterSetUp = function(store_count, cb_) {
         },
         function(cb_) {
           async.each(my.stores, function(s, cb_) {
-            var s_url = 'http://localhost:' + s.port + '/admin/user/1';
-            console.log('>>>> ' + s_url);
+            var s_url = 'http://localhost:' + s.port + '/admin/user/' + my.user.id;
+            //console.log('>>>> ' + s_url);
             request.put(s_url, {
               auth: {
                 user: 'admin',
@@ -101,7 +112,7 @@ exports.clusterSetUp = function(store_count, cb_) {
     },
     function(cb_) {
       async.each(my.stores, function(s, cb_) {
-        request.get('http://localhost:' + s.port + '/admin/user/1/code', {
+        request.get('http://localhost:' + s.port + '/admin/user/' + my.user.id + '/code', {
           auth: {
             user: 'admin',
             pass: s.key,
@@ -118,12 +129,11 @@ exports.clusterSetUp = function(store_count, cb_) {
     },
     function(cb_) {
       async.each(my.stores, function(s, cb_) {
-        var t_url = 'http://localhost:' + my.table.port + 
-                    '/user/1/table/' + my.user.stream + '/store?master=' + my.user.master;
-        console.log('>>>> ' + t_url);
+        var t_url = my.table.url + 'table/' + my.user.channel + '/store?master=' + my.user.master;
+        //console.log('>>>> ' + t_url);
         request.post(t_url, {
           json: {
-            store_url: 'http://localhost:' + s.port + '/user/1/',
+            store_url: s.url,
             code: s.code
           }
         }, cb_);
@@ -133,9 +143,8 @@ exports.clusterSetUp = function(store_count, cb_) {
 };
 
 exports.clusterGetToken = function(expiry, cb_) {
-  var t_url = 'http://localhost:' + my.table.port + 
-               '/user/1/token?master=' + my.user.master + '&expiry=' + expiry;
-  console.log('>>>> ' + t_url);
+  var t_url = my.table.url + 'token?master=' + my.user.master + '&expiry=' + expiry;
+  //console.log('>>>> ' + t_url);
   request.get(t_url, {
     json: true
   }, function(err, res, body) {
@@ -158,3 +167,4 @@ exports.clusterTearDown = function(cb_) {
   });
   return cb_();
 };
+

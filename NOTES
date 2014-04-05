@@ -5,15 +5,25 @@
 >>>v0.x<<<
 
 TODO(spolu): Remove client/test
-TODO(spolu): Write more tests
-TODO(spolu): Add table API to client
+
 TODO(spolu): Move to Session-Token / Session-Device-Token
 TODO(spolu): Add Revocation API to table
 TODO(spolu): Add Revocation API to client
 
+TODO(spolu): Write Initial `store` tests
+
 DONE: 
 
->>v0.2<<
+>>v0.1.2<<
+
+- Add `client` kill
+- Add table API to client
+- Write Initial Test Suite 
+ + Integration test with locally running table/store
+ + Initial `table` tests
+ + Initial `client` tests
+
+
 
 /******************************************************************************/
 /* NOTES(spolu) */
