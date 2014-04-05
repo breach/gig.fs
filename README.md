@@ -58,6 +58,16 @@ clients to all of the stores upon reconnect.
 Finally, stores stream operations they accept so that clients can stay up to
 date, so that most oplog read happen locally.
 
+Session Tokens:
+---------------
+
+- Sessions are created on the table with a Timeout
+- Session Tokens are used to generate Session Store Tokens
+- Session Store Tokens are checked initially by the Store and inherit the
+  Session Timeout
+- When revoking, revoke the Session and Require Stores to check the Session
+  Store Token, from the session holder or table
+
 Conflict Resolution:
 --------------------
 ```
@@ -102,13 +112,14 @@ PUT  /user/:user_id/master/:master                     // revoke all tokens
 
 /* PUBLIC */
 
-// token
-GET  /user/:user_id/token
-     master, expiry, description
-GET  /user/:user_id/token/all
+// sessions
+GET  /user/:user_id/session/new
+     master, timeout, description
+GET  /user/:user_id/session
      master
-DEL  /user/:user_id/token/:token
-GET  /user/:user_id/token/:token/check
+DEL  /user/:user_id/session/:session_token
+GET  /user/:user_id/session/:session_token
+GET  /user/:user_id/session/check/:session_store_token
 
 // table
 POST /user/:user_id/table/:channel/store
@@ -154,15 +165,19 @@ GET  /admin/user/:user_id/code
 POST {BASE_URL}/confirm
      { table_url, code }
 
+// session_store token
+GET  {BASE_URL}/session/:session_store_token
+DEL  {BASE_URL}/session/:session_store_token
+
 // oplog
 POST {BASE_URL}/oplog
-     token, path, type
+     session_store_token, path, type
      { date, payload|value, sha }
 GET  {BASE_URL}/oplog
-     token, path, type
+     session_store_token, path, type
 
 GET  {BASE_URL}/oplog/stream
-     token, [reg_id]
+     session_storetoken, [reg_id]
 
 Storage:
 - user's meta:   $TEABAG_DATA/:salt/:user/user.json
