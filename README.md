@@ -108,7 +108,7 @@ user_id -> {
 /* ADMIN */
 
 // master
-PUT  /user/:user_id/master/:master                     // revoke all tokens
+PUT  /user/:user_id/master/:master                     // revoke all sessions
 
 /* PUBLIC */
 
@@ -174,7 +174,6 @@ POST {BASE_URL}/oplog
      { date, payload|value, sha }
 GET  {BASE_URL}/oplog
      store_token, path, type
-
 GET  {BASE_URL}/oplog/stream
      store_token, [reg_id]
 
