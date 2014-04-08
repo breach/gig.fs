@@ -316,7 +316,7 @@ exports.check_store_token = function(session_token, store_token) {
      store_token.split('_').length !== 6) {
     return false;
   }
-  var store_split = session_token.split('_');
+  var store_split = store_token.split('_');
 
   if(store_split[0] !== 'store') {
     return false;

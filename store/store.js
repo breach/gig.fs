@@ -7,6 +7,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-07 spolu  Introduce `store_token`
  * - 2014-03-19 spolu  Renaming to `store`
  * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-26 spolu  Creation
