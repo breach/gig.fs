@@ -83,6 +83,7 @@ exports.put_master = function(req, res, next) {
     },
     function(cb_) {
       user.master = master;
+      user.user_id = user_id;
       return storage.put(user_id, 'user.json', user, cb_);
     },
     function(cb_) {

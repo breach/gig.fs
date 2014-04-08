@@ -7,11 +7,14 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-07 spolu  Introduce `session_token`
  * - 2014-03-19 spolu  Renaming to `table`
  * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-28 spolu  Added `token/all' route
  * - 2014-02-19 spolu  Creation
  */
+"use strict";
+
 var express = require('express');
 var util = require('util');
 var fs = require('fs');
@@ -46,16 +49,17 @@ var setup = function() {
   app.put( '/admin/user/:user_id/master/:master',           require('./routes/admin.js').put_master);
 
   /* PUBLIC (MASTER) */
-  app.get( '/user/:user_id/token',                          require('./routes/token.js').get_token);
-  app.get( '/user/:user_id/token/all',                      require('./routes/token.js').get_token_all);
-  app.del( '/user/:user_id/token/:token',                   require('./routes/token.js').del_token);
-  app.get( '/user/:user_id/token/:token/check',             require('./routes/token.js').get_token_check);
+  app.get( '/user/:user_id/session/new',                    require('./routes/session.js').get_session_new);
+  app.get( '/user/:user_id/session/all',                    require('./routes/session.js').get_session_all);
+  app.del( '/user/:user_id/session/:session_token',         require('./routes/session.js').del_session);
+  app.get( '/user/:user_id/session/check/:session_token',   require('./routes/session.js').get_session_token_check);
 
   app.post('/user/:user_id/table/:channel/store',           require('./routes/table.js').post_channel_store);
   app.del( '/user/:user_id/table/:channel/store/:store_id', require('./routes/table.js').del_channel_store);
   app.del( '/user/:user_id/table/:channel',                 require('./routes/table.js').del_channel);
   app.get( '/user/:user_id/table',                          require('./routes/table.js').get_table);
   app.get( '/user/:user_id/table/:channel',                 require('./routes/table.js').get_channel);
+  app.get( '/user/:user_id/table/check/:store_token',       require('./routes/table.js').get_store_token_check);
 };
 
 

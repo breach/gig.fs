@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-07 spolu  Introduce `store_token`
  * - 2014-03-20 spolu  Use `request` package
  * - 2014-02-28 spolu  Allow table access with token
  * - 2014-02-28 spolu  Move utility methods to `utility.js`
@@ -71,7 +72,7 @@ exports.post_channel_store = function(req, res, next) {
                               'TableError:InvalidStoreUrl'));
       }
       store = {
-        id: common.hash([url_p.href]),
+        store_id: common.hash([url_p.href]),
         url: url_p.href,
         code: req.body.code,
         created_time: Date.now()
@@ -109,7 +110,7 @@ exports.post_channel_store = function(req, res, next) {
           return cb_(err);
         }
         table[channel] = table[channel] || {};
-        table[channel][store.id] = store;
+        table[channel][store.store_id] = store;
         return storage.put(user_id, 'table.json', table, cb_);
       });
     }
@@ -222,6 +223,7 @@ exports.del_channel = function(req, res, next) {
 
 //
 // ### GET /user/:user_id/table
+// master, session_token
 //
 exports.get_table = function(req, res, next) {
   var user_id = parseInt(req.param('user_id', 10));
@@ -250,20 +252,30 @@ exports.get_table = function(req, res, next) {
         });
       }
       else {
-        return require('./utility.js').user_token_check(user_id,
-                                                        req.param('token'),
-                                                        function(err, json) {
+        return require('./utility.js')
+                 .user_session_token_check(user_id,
+                                           req.param('session_token'),
+                                           function(err, json) {
           user = json;
           return cb_(err);
         });
       }
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, t) {
+      storage.get(user_id, 'table.json', function(err, json) {
         if(err) {
           return cb_(err);
         }
-        table = t;
+        table = json;
+        if(req.param('session_token')) {
+          Object.keys(table).forEach(function(c) {
+            Object.keys(table[c]).forEach(function(s) {
+              table[c][s].store_token = 
+                require('utility.js').make_store_token(req.param('session_token'),
+                                                       table[c][s]);
+            });
+          });
+        }
         return cb_();
       });
     }
@@ -311,9 +323,10 @@ exports.get_channel = function(req, res, next) {
         });
       }
       else {
-        return require('./utility.js').user_token_check(user_id,
-                                                        req.param('token'),
-                                                        function(err, json) {
+        return require('./utility.js')
+                 .user_session_token_check(user_id,
+                                           req.param('session_token'),
+                                           function(err, json) {
           user = json;
           return cb_(err);
         });
@@ -326,6 +339,13 @@ exports.get_channel = function(req, res, next) {
         }
         if(t[ch]) {
           channel = t[ch];
+          if(req.param('session_token')) {
+            Object.keys(channel).forEach(function(s) {
+              channel[s].store_token = 
+                require('utility.js').make_store_token(req.param('session_token'),
+                                                       channel[s]);
+            });
+          }
         }
         return cb_();
       });
@@ -335,6 +355,35 @@ exports.get_channel = function(req, res, next) {
       return res.error(err);
     }
     return res.data(channel);
+  });
+};
+
+//
+// ### GET /user/:user_id/table/check/:store_token
+//
+exports.get_store_token_check = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'SessionError:InvalidUserId'));
+  }
+
+  var user = null;
+
+  async.series([
+    function(cb_) {
+      require('./utility.js').user_store_token_check(user_id,
+                                                     req.param('session_token'),
+                                                     function(err, json) {
+        user = json;
+        return cb_(err);
+      });
+    },
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
   });
 };
 
