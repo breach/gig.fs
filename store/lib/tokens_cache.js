@@ -1,5 +1,5 @@
 /*
- * TeaBag: tokens.js
+ * TeaBag: tokens_cache.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -17,15 +17,18 @@ var request = require('request');
 var common = require('../../lib/common.js');
 var storage = require('../../lib/storage.js').storage({});
 
-// ## tokens
+// ## tokens_cache
 //
 // `store_token` local cache. It caches tokens for a given table_url and user_id 
 // and checks their continued validity until they timeout or they are revoked.
 //
+// TODO(spolu): add user_id in API for equality check! (otherwise any user can
+//              use another user's data)
+//
 // ```
 // @spec {}
 // ```
-var tokens = function(spec, my) {
+var tokens_cache = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
@@ -234,5 +237,5 @@ var tokens = function(spec, my) {
   return that;
 };
 
-exports.tokens = tokens;
+exports.tokens_cache = tokens_cache;
 

@@ -48,6 +48,8 @@ var setup = function() {
   /* PUBLIC */
   app.post('/user/:user_id/confirm',                          require('./routes/user.js').post_confirm);
 
+  //app.del( '/user/:user_id/:store_token',                     require('./routes/user.js').del_store_token);
+
   app.post('/user/:user_id/oplog',                            require('./routes/user.js').post_oplog);
   app.get( '/user/:user_id/oplog',                            require('./routes/user.js').get_oplog);
   app.get( '/user/:user_id/oplog/stream',                     require('./routes/user.js').get_oplog_stream);
