@@ -41,7 +41,7 @@ var common = require('../../lib/common.js');
 // ```
 //
 // ```
-// @spec { id, json, token, registry }
+// @spec { id, json, registry }
 // @emits 'mutate'
 // ```
 var store = function(spec, my) {
@@ -52,7 +52,7 @@ var store = function(spec, my) {
 
   my.id = spec.id;
   my.json = spec.json || {};
-  my.token = spec.token;
+  my.store_token = my.json.store_token;
   my.registry = spec.registry;
 
   my.tuples = {};
@@ -97,7 +97,7 @@ var store = function(spec, my) {
     }
 
     var stream_url = my.store_url + 'oplog/stream' + 
-      '?token=' + my.token;
+      '?store_token=' + my.store_token;
 
     if(my.reg_id) {
       stream_url += '&reg_id=' + my.reg_id;
@@ -172,8 +172,8 @@ var store = function(spec, my) {
                  my.tuples[type][path].oplog);
     }
     else {
-      var oplog_url = my.store_url + 'oplog' +
-        '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
+      var oplog_url = my.store_url + 'oplog' + '?type=' + type + 
+        '&path=' + escape(path) + '&store_token=' + my.store_token;
 
       request.get({
         url: oplog_url,
@@ -279,8 +279,8 @@ var store = function(spec, my) {
         /* This is not a NOOP so we emit an mutate event for syncpruning. */
         that.emit('mutate', type, path, my.tuples[type][path].value);
 
-        var oplog_url = my.store_url + 'oplog' +
-          '?type=' + type + '&path=' + escape(path) + '&token=' + my.token;
+        var oplog_url = my.store_url + 'oplog' + '?type=' + type + 
+          '&path=' + escape(path) + '&store_token=' + my.store_token;
 
         request.post({
           url: oplog_url,

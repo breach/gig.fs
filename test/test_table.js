@@ -5,7 +5,7 @@ var async = require('async');
 var _int = {};
 
 exports.setUp = function(cb_) {
-  require('./cluster_setup.js').table_setup(false, function(err) {
+  require('./cluster_setup.js').table_setup(true, function(err) {
     _int = require('./cluster_setup.js').internal();
     return cb_(err);
   });

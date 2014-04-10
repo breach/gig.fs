@@ -26,7 +26,7 @@ var common = require('../../lib/common.js');
 // propagation among the stores for that channel.
 //
 // ```
-// @spec { name, json, token, registry }
+// @spec { name, json, registry }
 // ```
 var channel = function(spec, my) {
   my = my || {};
@@ -36,7 +36,6 @@ var channel = function(spec, my) {
 
   my.name = spec.name;
   my.json = spec.json || {};
-  my.token = spec.token;
   my.registry = spec.registry;
 
   my.stores = {};
@@ -129,7 +128,7 @@ var channel = function(spec, my) {
         Object.keys(oplogs).forEach(function(s) {
           if(!length) {
             length = oplogs[s].length;
-            console.log(length);
+            //console.log(length);
           }
           else if(oplogs[s].length !== length) {
             return cb_(common.err('Oplog length mismatch at pruning : ' + 
@@ -160,7 +159,7 @@ var channel = function(spec, my) {
         }
         op.sha = common.hash([ op.date.toString(),
                                JSON.stringify(op.value) ]);
-        console.log('PUSHING: ' + op.sha);
+        common.log.out('PUSHING: ' + op.sha);
         async.each(Object.keys(my.stores), function(s, cb_) {
           my.stores[s].push(type, path, op, cb_);
         }, cb_);
@@ -287,7 +286,6 @@ var channel = function(spec, my) {
       my.stores[s] = require('./store.js').store({
         id: s,
         json: my.json[s],
-        token: my.token,
         registry: my.registry
       });
       my.stores[s].init(cb_);
