@@ -152,7 +152,7 @@ exports.user_store_token_check = function(user_id, store_token, cb_) {
         /* Filters out old sessions. Done whenever the `sessions.json` file */
         /* is fetched from disk.                                            */
         sessions = sessions.filter(function(s) {
-          return exports.check_sesions(user, s);
+          return exports.check_session(user, s);
         });
 
         /* Retrieve session matching this `store_token` and check. */

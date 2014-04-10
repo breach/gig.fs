@@ -42,7 +42,7 @@ var tokens_cache = function(spec, my) {
   // _private_
   // 
   var expand;       /* expand(store_token); */
-  var fatal;        /* fatal(cb_); */
+  var fatal;        /* fatal(store_token, cb_); */
   var table_check;  /* table_check(store_token, cb_); */
 
   //
@@ -69,7 +69,7 @@ var tokens_cache = function(spec, my) {
 
     var expand = {};
 
-    if(store_split[0] !== 'store') {
+    if(split[0] !== 'store') {
       return null;
     }
 
@@ -95,7 +95,7 @@ var tokens_cache = function(spec, my) {
   // ```
   // @cb_         {function(err)}
   // ```
-  fatal = function(cb_) {
+  fatal = function(store_token, cb_) {
     return cb_(common.err('Invalid `store_token`: ' + store_token,
                           'TokensError:InvalidStoreToken'));
   };
@@ -110,7 +110,7 @@ var tokens_cache = function(spec, my) {
   table_check = function(store_token, cb_) {
     var exp = expand(store_token);
     if(!exp) {
-      return fatal(cb_);
+      return fatal(store_token, cb_);
     }
 
     var table_url = null;
@@ -123,9 +123,9 @@ var tokens_cache = function(spec, my) {
             return cb_(err);
           }
           if(!json || !json.table.url) {
-            return fatal(cb_);
+            return fatal(store_token, cb_);
           }
-          table_url = json.table_url;
+          table_url = json.table.url;
           return cb_();
         });
       },
@@ -135,13 +135,13 @@ var tokens_cache = function(spec, my) {
           json: true
         }, function(err, res, json) {
           if(err || res.statusCode !== 200) {
-            return fatal(cb_);
+            return fatal(store_token, cb_);
           }
           if(json && json.ok) {
             return cb_();
           }
           else {
-            return fatal(cb_);
+            return fatal(store_token, cb_);
           }
         });
       }
@@ -166,10 +166,10 @@ var tokens_cache = function(spec, my) {
   check = function(user_id, store_token, cb_) {
     var exp = expand(store_token);
     if(!exp) {
-      return fatal(cb_);
+      return fatal(store_token, cb_);
     }
     if(exp.user_id !== user_id) {
-      return fatal(cb_);
+      return fatal(store_token, cb_);
     }
 
     if(my.cache[store_token]) {
@@ -183,7 +183,7 @@ var tokens_cache = function(spec, my) {
       }
       else {
         delete my.cache[store_token];
-        return fatal(cb_);
+        return fatal(store_token, cb_);
       }
     }
 
@@ -193,7 +193,7 @@ var tokens_cache = function(spec, my) {
       last_check: Date.now()
     };
 
-    table_check(function(err) {
+    table_check(store_token, function(err) {
       if(err) {
         my.cache[store_token].callbacks.forEach(function(cb_) {
           return cb_(err);
@@ -224,7 +224,7 @@ var tokens_cache = function(spec, my) {
         var callbacks = my.cache[store_token].callbacks;
         delete my.cache[store_token];
         callbacks.forEach(function(cb_) {
-          return fatal(cb_);
+          return fatal(store_token, cb_);
         });
       }
     }

@@ -114,6 +114,29 @@ exports.post_confirm = function(req, res, next) {
 };
 
 //
+// ### DEL  /user/:user_id/session/:store_token
+//
+exports.del_store_token = function(req, res, next) {
+  var user_id = parseInt(req.param('user_id', 10));
+  if(!user_id) {
+    return res.error(common.err('Invalid `user_id`: ' + req.param('user_id'),
+                                'SessionError:InvalidUserId'));
+  }
+
+  async.series([
+    function(cb_) {
+      tokens_cache.revoke(req.param('store_token'));
+      return cb_();
+    }
+  ], function(err) {
+    if(err) {
+      return res.error(err);
+    }
+    return res.ok();
+  });
+};
+
+//
 // ### POST /user/:user_id/oplog
 //          { date, payload | value, sha }
 //

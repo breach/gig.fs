@@ -373,7 +373,7 @@ exports.get_store_token_check = function(req, res, next) {
   async.series([
     function(cb_) {
       require('./utility.js').user_store_token_check(user_id,
-                                                     req.param('session_token'),
+                                                     req.param('store_token'),
                                                      function(err, json) {
         user = json;
         return cb_(err);
