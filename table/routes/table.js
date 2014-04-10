@@ -342,8 +342,8 @@ exports.get_channel = function(req, res, next) {
           if(req.param('session_token')) {
             Object.keys(channel).forEach(function(s) {
               channel[s].store_token = 
-                require('utility.js').make_store_token(req.param('session_token'),
-                                                       channel[s]);
+                require('./utility.js').make_store_token(req.param('session_token'),
+                                                         channel[s]);
             });
           }
         }

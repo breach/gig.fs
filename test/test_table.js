@@ -5,7 +5,7 @@ var async = require('async');
 var _int = {};
 
 exports.setUp = function(cb_) {
-  require('./cluster_setup.js').table_setup(true, function(err) {
+  require('./cluster_setup.js').table_setup(false, function(err) {
     _int = require('./cluster_setup.js').internal();
     return cb_(err);
   });
@@ -111,46 +111,45 @@ exports.session_routes = function(test) {
   });
 };
 
-/*
 
 exports.table_routes = function(test) {
-  var token = null;
+  var session = null;
+  var table = null;
+  var TIMEOUT = 1000 * 60;
 
   async.series([
     function(cb_) {
-      var expiry = Date.now() + 1000 * 60 * 60 * 10;
-      require('./cluster_setup.js').clusterGetToken(expiry, function(err, t) {
-        if(err) {
-          return cb_(err);
-        }
-        token = t;
-        return cb_();
+      require('./cluster_setup.js').store_setup(true, cb_);
+    },
+    function(cb_) {
+      require('./cluster_setup.js').table_session(TIMEOUT, function(err, s) {
+        session = s;
+        return cb_(err);
       });
     },
     function(cb_) {
-      var t_url = _int.table.url + 'table?token=' + token;
-      request.get(t_url, { json: true }, function(err, res, table) {
-        if(err) {
-          throw err;
-        }
+      require('./cluster_setup.js').table_table(session.session_token, function(err, t) {
+        table = t;
+
         var channel = _int.user.channel;
         var store_url = _int.stores[0].url;
         var store_id = common.hash([store_url]);
         var store_code = _int.stores[0].code;
 
         test.equal(Object.keys(table)[0], channel);
-        test.equal(Object.keys(table[_int.user.channel])[0], store_id);
-        test.equal(table[channel][store_id].id, store_id);
+        test.equal(Object.keys(table[channel])[0], store_id);
+        test.equal(table[channel][store_id].store_id, store_id);
         test.equal(table[channel][store_id].url, store_url);
         test.equal(table[channel][store_id].code, store_code);
+        test.ok(typeof table[channel][store_id].store_token === 'string');
 
         //console.log(table);
-        return cb_();
+        return cb_(err);
       });
     },
     function(cb_) {
-      var ch = _int.user.channel;
-      var t_url = _int.table.url + 'table/' + ch + '?token=' + token;
+      var t_url = _int.table.url + 'table/' + _int.user.channel + 
+        '?session_token=' + session.session_token;
       request.get(t_url, { json: true }, function(err, res, channel) {
         if(err) {
           throw err;
@@ -160,9 +159,10 @@ exports.table_routes = function(test) {
         var store_code = _int.stores[0].code;
 
         test.equal(Object.keys(channel)[0], store_id);
-        test.equal(channel[store_id].id, store_id);
+        test.equal(channel[store_id].store_id, store_id);
         test.equal(channel[store_id].url, store_url);
         test.equal(channel[store_id].code, store_code);
+        test.ok(typeof channel[store_id].store_token === 'string');
 
         //console.log(channel);
         return cb_();
@@ -175,4 +175,4 @@ exports.table_routes = function(test) {
     test.done();
   });
 };
-*/
+

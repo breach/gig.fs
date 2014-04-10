@@ -11,10 +11,10 @@ exports.setUp = function(cb_) {
       return cb_();
     },
     function(cb_) {
-      require('./cluster_setup.js').table_setup(false, cb_);
+      require('./cluster_setup.js').table_setup(true, cb_);
     },
     function(cb_) {
-      require('./cluster_setup.js').store_setup(false, cb_);
+      require('./cluster_setup.js').store_setup(true, cb_);
     }
   ], cb_);
 };
@@ -70,7 +70,6 @@ exports.store_token_routes = function(test) {
         if(err) {
           return cb_(err);
         }
-        console.log(body);
         return cb_();
       });
     },
@@ -83,6 +82,7 @@ exports.store_token_routes = function(test) {
         if(err) {
           return cb_(err);
         }
+        /* The token is reaccepted as it has not been revoked from table. */
         test.equals(body.value, null);
         return cb_();
       });
@@ -94,3 +94,4 @@ exports.store_token_routes = function(test) {
     test.done();
   });
 };
+
