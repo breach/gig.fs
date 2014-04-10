@@ -22,9 +22,6 @@ var storage = require('../../lib/storage.js').storage({});
 // `store_token` local cache. It caches tokens for a given table_url and user_id 
 // and checks their continued validity until they timeout or they are revoked.
 //
-// TODO(spolu): add user_id in API for equality check! (otherwise any user can
-//              use another user's data)
-//
 // ```
 // @spec {}
 // ```
@@ -38,13 +35,14 @@ var tokens_cache = function(spec, my) {
   //
   // _public_
   // 
-  var check;        /* check(store_token, cb_); */
+  var check;        /* check(user_id, store_token, cb_); */
   var revoke        /* revoke(store_token); */
 
   //
   // _private_
   // 
   var expand;       /* expand(store_token); */
+  var fatal;        /* fatal(cb_); */
   var table_check;  /* table_check(store_token, cb_); */
 
   //
@@ -90,6 +88,17 @@ var tokens_cache = function(spec, my) {
     }
     return expand;
   };
+
+  // ### fatal
+  //
+  // Returns a default error (not to leak any info)
+  // ```
+  // @cb_         {function(err)}
+  // ```
+  fatal = function(cb_) {
+    return cb_(common.err('Invalid `store_token`: ' + store_token,
+                          'TokensError:InvalidStoreToken'));
+  };
   
   // ### table_check
   //
@@ -99,15 +108,9 @@ var tokens_cache = function(spec, my) {
   // @cb_         {function(err)}
   // ```
   table_check = function(store_token, cb_) {
-    /* Return standard error to not leak any information. */
-    var fatal = function() {
-      return cb_(common.err('Invalid `store_token`: ' + store_token,
-                            'TokensError:InvalidStoreToken'));
-    }
-
     var exp = expand(store_token);
     if(!exp) {
-      return fatal();
+      return fatal(cb_);
     }
 
     var table_url = null;
@@ -120,7 +123,7 @@ var tokens_cache = function(spec, my) {
             return cb_(err);
           }
           if(!json || !json.table.url) {
-            return fatal();
+            return fatal(cb_);
           }
           table_url = json.table_url;
           return cb_();
@@ -132,13 +135,13 @@ var tokens_cache = function(spec, my) {
           json: true
         }, function(err, res, json) {
           if(err || res.statusCode !== 200) {
-            return fatal();
+            return fatal(cb_);
           }
           if(json && json.ok) {
             return cb_();
           }
           else {
-            return fatal();
+            return fatal(cb_);
           }
         });
       }
@@ -156,19 +159,17 @@ var tokens_cache = function(spec, my) {
   // If a check is pending on the network, the callback is queued for later
   // reply when the answer is retrieved from the network.
   // ```
+  // @user_id     {number} the user_id for that token
   // @store_token {string} the token to check
   // @cb_         {function(err)}
   // ```
-  check = function(store_token, cb_) {
-    /* Return standard error to not leak any information. */
-    var fatal = function() {
-      return cb_(common.err('Invalid `store_token`: ' + store_token,
-                            'TokensError:InvalidStoreToken'));
-    }
-
+  check = function(user_id, store_token, cb_) {
     var exp = expand(store_token);
     if(!exp) {
-      return fatal();
+      return fatal(cb_);
+    }
+    if(exp.user_id !== user_id) {
+      return fatal(cb_);
     }
 
     if(my.cache[store_token]) {
@@ -182,7 +183,7 @@ var tokens_cache = function(spec, my) {
       }
       else {
         delete my.cache[store_token];
-        return fatal();
+        return fatal(cb_);
       }
     }
 
@@ -223,8 +224,7 @@ var tokens_cache = function(spec, my) {
         var callbacks = my.cache[store_token].callbacks;
         delete my.cache[store_token];
         callbacks.forEach(function(cb_) {
-          return cb_(common.err('Invalid `store_token`: ' + store_token,
-                                'TokensError:InvalidStoreToken'));
+          return fatal(cb_);
         });
       }
     }

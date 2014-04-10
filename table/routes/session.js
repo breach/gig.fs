@@ -56,7 +56,7 @@ exports.get_session_new = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, tokens) {
+      storage.get(user_id, 'sessions.json', function(err, sessions) {
         if(err) {
           return cb_(err);
         }
@@ -114,7 +114,7 @@ exports.get_session_all = function(req, res, next) {
         /* Filters out old sessions. Done whenever the `sessions.json` file */
         /* is fetched from disk.                                            */
         sessions = json.filter(function(s) {
-          return require('./utility.js').check_sessions(user, s);
+          return require('./utility.js').check_session(user, s);
         });
         return cb_();
       });
@@ -171,7 +171,7 @@ exports.del_session = function(req, res, next) {
           return true;
         });
 
-        return storage.put(user_id, 'sessions.json', tokens, cb_);
+        return storage.put(user_id, 'sessions.json', sessions, cb_);
       });
     }
   ], function(err) {

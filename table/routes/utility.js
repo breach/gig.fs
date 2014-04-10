@@ -90,7 +90,7 @@ exports.user_session_token_check = function(user_id, session_token, cb_) {
         /* Filters out old sessions. Done whenever the `sessions.json` file */
         /* is fetched from disk.                                            */
         sessions = sessions.filter(function(s) {
-          return exports.check_sesions(user, s);
+          return exports.check_session(user, s);
         });
 
         /* Retrieve session object and update `last_check` */
@@ -103,7 +103,7 @@ exports.user_session_token_check = function(user_id, session_token, cb_) {
 
         /* We write back the sessions as we updated the `last_check` or */
         /* filtered outdated sessions.                                  */
-        return storage.put(user_id, 'sessions.json', tokens, cb_);
+        return storage.put(user_id, 'sessions.json', sessions, cb_);
       });
     }
   ], function(err) {
@@ -165,7 +165,7 @@ exports.user_store_token_check = function(user_id, store_token, cb_) {
 
         /* We write back the sessions as we updated the `last_check` or */
         /* filtered outdated sessions.                                  */
-        return storage.put(user_id, 'sessions.json', tokens, cb_);
+        return storage.put(user_id, 'sessions.json', sessions, cb_);
       });
     }
   ], function(err) {
@@ -200,7 +200,7 @@ exports.check_session_token = function(user, session_token) {
   if(split[0] !== 'session') {
     return false;
   }
-  if(split[1] !== user.user_id) {
+  if(parseInt(split[1], 10) !== user.user_id) {
     return false;
   }
   var timeout = parseInt(split[3], 10);

@@ -233,7 +233,7 @@ exports.get_table = function(req, res, next) {
   }
 
   if(typeof req.param('master') !== 'string' &&
-     typeof req.param('token') !== 'string') {
+     typeof req.param('session_token') !== 'string') {
     return res.error(common.err('Missing Credentials',
                                 'TableError:MissingCredentials'));
   }
@@ -271,8 +271,8 @@ exports.get_table = function(req, res, next) {
           Object.keys(table).forEach(function(c) {
             Object.keys(table[c]).forEach(function(s) {
               table[c][s].store_token = 
-                require('utility.js').make_store_token(req.param('session_token'),
-                                                       table[c][s]);
+                require('./utility.js').make_store_token(req.param('session_token'),
+                                                         table[c][s]);
             });
           });
         }
@@ -298,7 +298,7 @@ exports.get_channel = function(req, res, next) {
   }
 
   if(typeof req.param('master') !== 'string' &&
-     typeof req.param('token') !== 'string') {
+     typeof req.param('session_token') !== 'string') {
     return res.error(common.err('Missing Credentials',
                                 'TableError:MissingCredentials'));
   }

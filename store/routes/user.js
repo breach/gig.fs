@@ -169,7 +169,7 @@ exports.post_oplog = function(req, res, next) {
       });
     },
     function(cb_) {
-      tokens_cache.check(store_token, cb_);
+      tokens_cache.check(user_id, store_token, cb_);
     },
     function(cb_) {
       storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
@@ -274,7 +274,7 @@ exports.get_oplog = function(req, res, next) {
       });
     },
     function(cb_) {
-      tokens_cache.check(store_token, cb_);
+      tokens_cache.check(user_id, store_token, cb_);
     },
     function(cb_) {
       storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
@@ -332,7 +332,7 @@ exports.get_oplog_stream = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      tokens_cache.check(store_token, cb_);
+      tokens_cache.check(user_id, store_token, cb_);
     },
     function(cb_) {
       var closed = false;
