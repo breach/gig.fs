@@ -6,8 +6,9 @@
  * @author: spolu
  *
  * @log:
- * - 2014-04-04 spolu   Add `kill` method
- * - 2014-02-28 spolu   Creation
+ * - 2014-04-07 spolu  Introduce `session_token` / `store_token`
+ * - 2014-04-04 spolu  Add `kill` method
+ * - 2014-02-28 spolu  Creation
  */
 "use strict";
 
@@ -22,7 +23,7 @@ var common = require('../../lib/common.js');
 // Teabag Client API
 //
 // ```
-// @spec { server, token }
+// @spec { table_url, session_token }
 // ```
 var teabag = function(spec, my) {
   my = my || {};
@@ -189,8 +190,8 @@ var teabag = function(spec, my) {
     }
 
     my.table = require('./table.js').table({
-      server: spec.server,
-      token: spec.token,
+      url: spec.table_url,
+      session_token: spec.session_token,
       registry: my.registry
     });
 

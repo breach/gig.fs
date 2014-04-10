@@ -7,6 +7,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-07 spolu  Introduce `store_token`
  * - 2014-03-19 spolu  Renaming to `store`
  * - 2014-02-28 spolu  Separated srv/str keys
  * - 2014-02-26 spolu  Creation
@@ -46,6 +47,8 @@ var setup = function() {
 
   /* PUBLIC */
   app.post('/user/:user_id/confirm',                          require('./routes/user.js').post_confirm);
+
+  app.del( '/user/:user_id/session/:store_token',             require('./routes/user.js').del_store_token);
 
   app.post('/user/:user_id/oplog',                            require('./routes/user.js').post_oplog);
   app.get( '/user/:user_id/oplog',                            require('./routes/user.js').get_oplog);

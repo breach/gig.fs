@@ -1,38 +1,47 @@
+var request = require('request');
 var common = require('../lib/common.js');
 var async = require('async');
 
 var _int = {};
-var _token = null;
+var _session = null;
 var _tb = null;
 
 exports.setUp = function(cb_) {
-  require('./cluster_setup.js').clusterSetUp(1, function(err) {
-    if(err) {
-      return cb_(err);
-    }
-    _int = require('./cluster_setup.js').clusterInternal();
-    var expiry = Date.now() + 1000 * 60 * 60 * 10;
-    require('./cluster_setup.js').clusterGetToken(expiry, function(err, t) {
-      if(err) {
+  var TIMEOUT = 1000 * 60;
+
+  async.series([
+    function(cb_) {
+      _int = require('./cluster_setup.js').internal();
+      return cb_();
+    },
+    function(cb_) {
+      require('./cluster_setup.js').table_setup(true, cb_);
+    },
+    function(cb_) {
+      require('./cluster_setup.js').store_setup(true, cb_);
+    },
+    function(cb_) {
+      require('./cluster_setup.js').table_session(TIMEOUT, function(err, s) {
+        _session = s;
         return cb_(err);
-      }
-      _token = t;
+      });
+    },
+    function(cb_) {
       _tb = require('../client/index.js').teabag({
-        server: _int.table.url,
-        token: _token
+        table_url: _int.table.url,
+        session_token: _session.session_token
       });
       _tb.init(cb_);
-    });
-  });
+    }
+  ], cb_);
 };
 
 exports.tearDown = function(cb_) {
-  console.log('KILL');
   _tb.kill(function(err) {
     if(err) {
       return cb_(err);
     }
-    require('./cluster_setup.js').clusterTearDown(cb_);
+    require('./cluster_setup.js').tear_down(cb_);
   });
 };
 
@@ -88,7 +97,6 @@ exports.push_get = function(test) {
     function(cb_) {
       _tb.push(channel, 'test', '/foo/bar', { foo: 'bar' }, function(err, value) {
         test.equal(value, 1);
-        console.log('TOTO');
         return cb_();
       });
     },

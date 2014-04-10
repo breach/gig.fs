@@ -34,8 +34,8 @@ exports.user_create = function(user_id, cb_) {
         'user.json': function(cb_) {
           return storage.put(user_id, 'user.json', {}, cb_);
         },
-        'tokens.json': function(cb_) {
-          return storage.put(user_id, 'tokens.json', [], cb_);
+        'sessions.json': function(cb_) {
+          return storage.put(user_id, 'sessions.json', [], cb_);
         },
         'table.json': function(cb_) {
           return storage.put(user_id, 'table.json', {}, cb_);
@@ -83,11 +83,12 @@ exports.put_master = function(req, res, next) {
     },
     function(cb_) {
       user.master = master;
+      user.user_id = user_id;
       return storage.put(user_id, 'user.json', user, cb_);
     },
     function(cb_) {
-      /* Revokes all tokens. */
-      return storage.put(user_id, 'tokens.json', [], cb_);
+      /* Revokes all sessions. */
+      return storage.put(user_id, 'sessions.json', [], cb_);
     }
   ], function(err) {
     if(err) {
