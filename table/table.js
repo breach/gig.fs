@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * TeaBag: table.js
+ * GiG.fs: table.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -64,7 +64,7 @@ var setup = function() {
 
 
 // INIT & START
-common.log.out('teabag_table [Started]');
+common.log.out('gig_table [Started]');
 
 /* Setup */
 setup();

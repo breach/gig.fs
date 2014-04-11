@@ -4,7 +4,7 @@ var async = require('async');
 
 var _int = {};
 var _session = null;
-var _tb = null;
+var _gig = null;
 
 exports.setUp = function(cb_) {
   var TIMEOUT = 1000 * 60;
@@ -27,17 +27,17 @@ exports.setUp = function(cb_) {
       });
     },
     function(cb_) {
-      _tb = require('../client/index.js').teabag({
+      _gig = require('../client/index.js').gig({
         table_url: _int.table.url,
         session_token: _session.session_token
       });
-      _tb.init(cb_);
+      _gig.init(cb_);
     }
   ], cb_);
 };
 
 exports.tearDown = function(cb_) {
-  _tb.kill(function(err) {
+  _gig.kill(function(err) {
     if(err) {
       return cb_(err);
     }
@@ -50,9 +50,9 @@ exports.table_api = function(test) {
   var store_id = common.hash([_int.stores[0].url]);
   var store_url = _int.stores[0].url;
 
-  test.deepEqual(_tb.channels(), [channel]);
-  test.deepEqual(_tb.channel(channel).stores(), [store_id]);
-  test.deepEqual(_tb.channel(channel).store(store_id).url(), store_url);
+  test.deepEqual(_gig.channels(), [channel]);
+  test.deepEqual(_gig.channel(channel).stores(), [store_id]);
+  test.deepEqual(_gig.channel(channel).store(store_id).url(), store_url);
  
   return test.done();
 };
@@ -62,14 +62,14 @@ exports.no_reducer = function(test) {
 
   async.series([
     function(cb_) {
-      _tb.get(channel, 'test', '/foo/bar', function(err, value) {
+      _gig.get(channel, 'test', '/foo/bar', function(err, value) {
         test.equal(err.name, 'StoreError:TypeNotRegistered');
         test.equal(value, undefined);
         return cb_();
       });
     },
     function(cb_) {
-      _tb.push(channel, 'test', '/foo/bar', { foo: 'bar' },  function(err, value) {
+      _gig.push(channel, 'test', '/foo/bar', { foo: 'bar' },  function(err, value) {
         test.equal(err.name, 'StoreError:TypeNotRegistered');
         test.equal(value, undefined);
         return cb_();
@@ -81,7 +81,7 @@ exports.no_reducer = function(test) {
 exports.push_get = function(test) {
   var channel = _int.user.channel;
 
-  _tb.register('test', function(oplog) {
+  _gig.register('test', function(oplog) {
     var val = oplog[0].value || 0;
     val += (oplog.length - 1);
     return val;
@@ -89,13 +89,13 @@ exports.push_get = function(test) {
 
   async.series([
     function(cb_) {
-      _tb.get(channel, 'test', '/foo/bar', function(err, value) {
+      _gig.get(channel, 'test', '/foo/bar', function(err, value) {
         test.equal(value, 0);
         return cb_();
       });
     },
     function(cb_) {
-      _tb.push(channel, 'test', '/foo/bar', { foo: 'bar' }, function(err, value) {
+      _gig.push(channel, 'test', '/foo/bar', { foo: 'bar' }, function(err, value) {
         test.equal(value, 1);
         return cb_();
       });
@@ -105,7 +105,7 @@ exports.push_get = function(test) {
       setTimeout(cb_, 100);
     },
     function(cb_) {
-      _tb.get(channel, 'test', '/foo/bar', function(err, value) {
+      _gig.get(channel, 'test', '/foo/bar', function(err, value) {
         test.equal(value, 1);
         return cb_();
       });

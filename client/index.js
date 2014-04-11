@@ -1,2 +1,2 @@
-module.exports.teabag = require('./lib/teabag.js').teabag;
+module.exports.gig = require('./lib/gig.js').gig;
 

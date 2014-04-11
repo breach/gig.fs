@@ -1,5 +1,5 @@
 /*
- * TeaBag: routes/table.js
+ * GiG.fs: routes/table.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /**
- * TeaBag: channel.js
+ * GiG.fs: channel.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -20,7 +20,7 @@ var common = require('../../lib/common.js');
 
 // ## channel
 //
-// Teabag Client Channel Object
+// GiG.fs Client Channel Object
 //
 // The channel object is the main object in charge of data reconciliation and
 // propagation among the stores for that channel.

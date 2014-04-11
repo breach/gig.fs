@@ -1,5 +1,5 @@
 /**
- * TeaBag: table.js
+ * GiG.fs: table.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -21,7 +21,7 @@ var common = require('../../lib/common.js');
 
 // ## table
 //
-// Teabag Client Table Object
+// GiG.fs Client Table Object
 //
 // The table object is initiated by retrieving the table data for this user over
 // the network. 

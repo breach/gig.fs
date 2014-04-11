@@ -24,7 +24,7 @@ exports.table_setup = function(silent, cb_) {
   my.table = {
     url: 'http://localhost:4000/user/' + my.user.id + '/',
     port: 4000,
-    key: 'teabag_table_test_key',
+    key: 'gig_table_test_key',
     data_path: path.join(__dirname, 'TEABAG_DATA_TEST_TABLE')
   };
 
@@ -110,7 +110,7 @@ exports.store_setup = function(silent, cb_) {
   var store = {
     url: 'http://localhost:' + (4001 + my.store_count) + '/user/' + my.user.id + '/',
     port: 4001 + my.store_count,
-    key: 'teabag_store_test_key_' + my.store_count,
+    key: 'gig_store_test_key_' + my.store_count,
     data_path: path.join(__dirname, 'TEABAG_DATA_TEST_STORE_' + my.store_count),
     index: my.store_count
   };

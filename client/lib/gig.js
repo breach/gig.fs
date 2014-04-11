@@ -1,5 +1,5 @@
 /**
- * TeaBag: teabag.js
+ * GiG.fs: gig.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -18,14 +18,14 @@ var fs = require('fs');
 var async = require('async');
 var common = require('../../lib/common.js');
 
-// ## teabag
+// ## gig
 //
-// Teabag Client API
+// GiG.fs Client API
 //
 // ```
 // @spec { table_url, session_token }
 // ```
-var teabag = function(spec, my) {
+var gig = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
@@ -112,7 +112,7 @@ var teabag = function(spec, my) {
     var c = my.table.channel(channel);
     if(!c) {
       return cb_(common.err('Unknown `channel`: ' + channel,
-                            'TeaBagError:UnknownChannel'));
+                            'GiGError:UnknownChannel'));
     }
 
     return c.get(type, path, cb_);
@@ -142,7 +142,7 @@ var teabag = function(spec, my) {
     var c = my.table.channel(channel);
     if(!c) {
       return cb_(common.err('Unknown `channel`: ' + channel,
-                            'TeaBagError:UnknownChannel'));
+                            'GiGError:UnknownChannel'));
     }
 
     var op = {
@@ -241,5 +241,5 @@ var teabag = function(spec, my) {
   return that;
 };
 
-exports.teabag = teabag;
+exports.gig = gig;
 

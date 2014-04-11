@@ -1,5 +1,5 @@
 /*
- * TeaBag: routes/session.js
+ * GiG.fs: routes/session.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *

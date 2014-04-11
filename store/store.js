@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * TeaBag: store.js
+ * GiG.fs: store.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -56,7 +56,7 @@ var setup = function() {
 };
 
 // INIT & START
-common.log.out('teabag_store [Started]');
+common.log.out('gig_store [Started]');
 
 /* Setup */
 setup();

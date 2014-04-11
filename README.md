@@ -1,10 +1,10 @@
-TeaBag
+GiG.fs
 ======
 
 Centrally Orchestrated Multi Node Log-Based Storage with Distributed Conflict 
 Resolution
 
-TeaBag is a log-based multi node storage based on the principle of operation
+GiG.fs is a log-based multi node storage based on the principle of operation
 propagation and oplog pruning. Operations are pushed to the storage and conflict
 resolution is delegated to the client. Conflict resolution is done by retrieving
 the different operation logs and replaying them in a merged version.
@@ -94,7 +94,7 @@ Otherwise push a new value to all oplogs for pruning
 
 ```
 
-TeaBag Table
+GiG.fs Table
 ------------
 
 ```
@@ -141,7 +141,7 @@ Storage:
 
 ```
 
-TeaBag Store
+GiG.fs Store
 ------------
 
 ```
@@ -184,11 +184,11 @@ Storage:
 TODO: BLOB Storage
 ```
 
-TeaBag Client
+GiG.fs Client
 -------------
 
 ```
-var cli = require('teabag').teabag({
+var cli = require('gig.fs').gig({
   session_token: '...',
   url: '...'
 });

@@ -1,5 +1,5 @@
 /*
- * TeaBag: tokens_cache.js
+ * GiG.fs: tokens_cache.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *

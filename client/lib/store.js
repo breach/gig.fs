@@ -1,5 +1,5 @@
 /**
- * TeaBag: channel.js
+ * GiG.fs: channel.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -22,9 +22,9 @@ var common = require('../../lib/common.js');
 
 // ## store
 //
-// Teabag Client Channel Object
+// GiG.fs Client Channel Object
 //
-// The store object interfaces the teabag client with the stores associated
+// The store object interfaces the gig.fs client with the stores associated
 // with the different channels it uses. The store object shows the actual state
 // of the store and may not reflect the last known state for a given channel.
 // (eg. no connection)
