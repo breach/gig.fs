@@ -1,8 +1,0 @@
-{
-  "name": "teabag",
-  "version": "0.1.2",
-  "main": "./index.js",
-  "dependencies": {
-  }
-  "repository": "git://github.com/breach/teabag"
-}
