@@ -1,5 +1,5 @@
 /**
- * GiG.fs: channel.js
+ * GiG.fs: channel_in_memory.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
@@ -7,8 +7,7 @@
  *
  * @log:
  * - 2014-04-11 spolu  `in_memory` mode
- * - 2014-04-04 spolu   Add `kill` method
- * - 2014-03-05 spolu   Creation (on a plane!)
+ * - 2014-04-11 spolu   Creation
  */
 "use strict";
 
@@ -17,24 +16,21 @@ var events = require('events');
 var async = require('async');
 var common = require('../../lib/common.js');
 
-// ## channel
+// ## channel_in_memory.js
 //
-// GiG.fs Client Channel Object
+// GiG.fs Client Channel In Memory Object
 //
-// The channel object is the main object in charge of data reconciliation and
-// propagation among the stores for that channel.
+// Stores data in memory without interacting with any store.
 //
 // ```
 // @spec { name, registry }
 // ```
-var channel = function(spec, my) {
+var channel_in_memory = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
 
-
-  my.name = spec.name;
-  my.registry = spec.registry;
+  my.memory = {};
 
   //
   // _public_
@@ -52,7 +48,7 @@ var channel = function(spec, my) {
   //
   // #### _that_
   //
-  var that = new events.EventEmitter();
+  var that = require('./channel.js').channel(spec, my);
 
   /****************************************************************************/
   /* PRIVATE HELPERS */
@@ -70,8 +66,23 @@ var channel = function(spec, my) {
   // @cb_  {function(err, value)} callback
   // ```
   get = function(type, path, cb_) {
-    return cb_(common.err('Must be Implemented',
-                          'ChannelError:MustBeImplemented'));
+    if(!my.registry[type]) {
+      return cb_(common.err('Type not registered: ' + type,
+                            'StoreError:TypeNotRegistered'));
+    }
+    var htp = common.hash([type, path]);
+    
+    if(!my.memory[htp]) {
+      var op = {
+        date: 0,
+        value: null
+      };
+      op.sha = common.hash([ op.date.toString(),
+                             JSON.stringify(op.value) ]);
+      my.memory[htp] = [op];
+    }
+
+    return cb_(null, my.registry[type](my.memory[htp]));
   };
 
   // ### push
@@ -84,8 +95,37 @@ var channel = function(spec, my) {
   // @cb_  {function(err, value)} callback
   // ```
   push = function(type, path, op, cb_) {
-    return cb_(common.err('Must be Implemented',
-                          'ChannelError:MustBeImplemented'));
+    if(!my.registry[type]) {
+      return cb_(common.err('Type not registered: ' + type,
+                            'StoreError:TypeNotRegistered'));
+    }
+    var htp = common.hash([type, path]);
+    
+    if(!my.memory[htp]) {
+      var original_op = {
+        date: 0,
+        value: null
+      };
+      original_op.sha = common.hash([ original_op.date.toString(),
+                                      JSON.stringify(original_op.value) ]);
+      my.memory[htp] = [original_op];
+    }
+
+    my.memory[htp].push(op);
+    my.memory[htp].sort(function(o1, o2) {
+      return o1.date - o2.date;
+    });
+
+    var value = my.registry[type](my.memory[htp]);
+    var pruning_op = {
+      date: Date.now(),
+      value: value
+    }
+    pruning_op.sha = common.hash([ pruning_op.date.toString(),
+                                   JSON.stringify(pruning_op.value) ]);
+    my.memory[htp] = [pruning_op];
+
+    return cb_(null, value);
   };
 
 
@@ -96,8 +136,7 @@ var channel = function(spec, my) {
   // @cb_ {function(err)}
   // ```
   init = function(cb_) {
-    common.log.debug('CHANNEL [' + my.name + '] Initialization');
-    return cb_();
+    return _super.init(cb_);
   };
 
   // ### kill
@@ -108,8 +147,7 @@ var channel = function(spec, my) {
   // @cb_ {function(err)}
   // ```
   kill = function(cb_) {
-    that.removeAllListeners();
-    return cb_();
+    return _super.kill(cb_);
   };
 
 
@@ -122,4 +160,4 @@ var channel = function(spec, my) {
   return that;
 };
 
-exports.channel = channel;
+exports.channel_in_memory = channel_in_memory;

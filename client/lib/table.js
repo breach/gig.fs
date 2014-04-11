@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-11 spolu  `in_memory` mode
  * - 2014-04-04 spolu   Add `kill` method
  * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-01 spolu   Creation
@@ -23,26 +24,21 @@ var common = require('../../lib/common.js');
 //
 // GiG.fs Client Table Object
 //
-// The table object is initiated by retrieving the table data for this user over
-// the network. 
+// The base table object exposing the table interace. Two implemetations inherit
+// from it, `talbe_in_memory`, `table_networked`
 //
 // TODO(spolu):
-// - The table information must be kept up to date periodically.
 // - Emitting events to notify of any change on the table structure
 //
 // ```
-// @spec { url, session_token, registry }
+// @spec { registry }
 // ```
 var table = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
 
-  my.url = spec.url;
-  my.session_token = spec.session_token;
   my.registry = spec.registry;
-
-  my.json = null;
   my.channels = {};
 
   //
@@ -96,48 +92,8 @@ var table = function(spec, my) {
   // @cb_ {function(err)}
   // ```
   init = function(cb_) {
-    async.series([
-      function(cb_) {
-        var url_p = require('url').parse(my.url);
-        if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
-            url_p.query || url_p.search || 
-            !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
-          return cb_(common.err('Invalid `table_url`: ' + my.url,
-                                'TableError:InvalidUrl'));
-        }
-        var table_url = url_p.href + 'table?session_token='  + my.session_token;
-        request.get({
-          url: table_url,
-          json: true
-        }, function(err, res, json) {
-          if(err) {
-            return cb_(err);
-          }
-          if(json && !json.error) {
-            my.json = json;
-            return cb_();
-          }
-          else if(json && json.error) {
-            return cb_(common.err(json.error.message,
-                                  json.error.name));
-          }
-          else {
-            return cb_(common.err('Server Error: ' + table_url,
-                                  'TableError:ServerError'));
-          }
-        });
-      },
-      function(cb_) {
-        async.each(Object.keys(my.json), function(c, cb_) {
-          my.channels[c] = require('./channel.js').channel({
-            name: c,
-            json: my.json[c],
-            registry: my.registry
-          });
-          my.channels[c].init(cb_);
-        }, cb_);
-      }
-    ], cb_);
+    common.log.debug('TABLE Initialization');
+    return cb_();
   };
 
   // ### kill

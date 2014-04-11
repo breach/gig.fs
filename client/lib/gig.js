@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-04-11 spolu  `in_memory` mode
  * - 2014-04-07 spolu  Introduce `session_token` / `store_token`
  * - 2014-04-04 spolu  Add `kill` method
  * - 2014-02-28 spolu  Creation
@@ -20,10 +21,17 @@ var common = require('../../lib/common.js');
 
 // ## gig
 //
-// GiG.fs Client API
+// GiG.fs Client API is constructed with a `table_url` and a `session_token` to
+// access the table or the object `in_memory`.
+//
+// If `in_memory` is defined then the client will run entirely in memory and the
+// `in_memory_channels` array will be used to know which channels to expose. In 
+// `in_memory` mode, nothing is persisted and everything gets deleted upon
+// destruction of the `gig` object.
 //
 // ```
-// @spec { table_url, session_token }
+// @spec { table_url, session_token, 
+//         in_memory, in_memory_channels }
 // ```
 var gig = function(spec, my) {
   my = my || {};
@@ -34,6 +42,12 @@ var gig = function(spec, my) {
     done: false,
     callbacks: []
   };
+
+  my.table_url = spec.table_url || 'INVALID_TABLE_URL';
+  my.session_token = spec.session_token || 'INVALID_TOKEN';
+
+  my.in_memory = spec.in_memory || false;
+  my.in_memory_channels = spec.in_memory_channels || [];
 
   my.table = null;
   my.registry = {};
@@ -163,7 +177,7 @@ var gig = function(spec, my) {
   // @reducer {function([oplog])} a reducer function
   // ```
   register = function(type, reducer) {
-    my.registry[type ] = reducer;
+    my.registry[type] = reducer;
   };
 
   // ### init
@@ -189,11 +203,19 @@ var gig = function(spec, my) {
       return;
     }
 
-    my.table = require('./table.js').table({
-      url: spec.table_url,
-      session_token: spec.session_token,
-      registry: my.registry
-    });
+    if(my.in_memory) {
+      my.table = require('./table_in_memory.js').table_in_memory({
+        registry: my.registry,
+        channels: my.in_memory_channels
+      });
+    }
+    else {
+      my.table = require('./table_networked.js').table_networked({
+        registry: my.registry,
+        table_url: my.table_url,
+        session_token: my.session_token
+      });
+    }
 
     async.series([
       my.table.init
