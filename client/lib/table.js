@@ -31,15 +31,15 @@ var common = require('../../lib/common.js');
 // - Emitting events to notify of any change on the table structure
 //
 // ```
-// @spec { server, token, registry }
+// @spec { url, session_token, registry }
 // ```
 var table = function(spec, my) {
   my = my || {};
   spec = spec || {};
   var _super = {};        
 
-  my.server = spec.server;
-  my.token = spec.token;
+  my.url = spec.url;
+  my.session_token = spec.session_token;
   my.registry = spec.registry;
 
   my.json = null;
@@ -98,14 +98,14 @@ var table = function(spec, my) {
   init = function(cb_) {
     async.series([
       function(cb_) {
-        var url_p = require('url').parse(spec.server);
+        var url_p = require('url').parse(my.url);
         if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
             url_p.query || url_p.search || 
             !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
-          return cb_(common.err('Invalid Server URL: ' + spec.server,
+          return cb_(common.err('Invalid `table_url`: ' + my.url,
                                 'TableError:InvalidUrl'));
         }
-        var table_url = url_p.href + 'table?token='  + my.token;
+        var table_url = url_p.href + 'table?session_token='  + my.session_token;
         request.get({
           url: table_url,
           json: true
@@ -132,7 +132,6 @@ var table = function(spec, my) {
           my.channels[c] = require('./channel.js').channel({
             name: c,
             json: my.json[c],
-            token: my.token,
             registry: my.registry
           });
           my.channels[c].init(cb_);
