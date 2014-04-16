@@ -164,7 +164,7 @@ var store = function(spec, my) {
   get = function(type, path, cb_) {
     if(!my.registry[type]) {
       return cb_(common.err('Type not registered: ' + type,
-                            'StoreError:TypeNotRegistered'));
+                            'ReducerError:TypeNotRegistered'));
     }
     if(my.tuples[type] && my.tuples[type][path]) {
       return cb_(null, 
@@ -189,6 +189,10 @@ var store = function(spec, my) {
               oplog: oplog,
               value: my.registry[type](oplog)
             };
+            if(typeof my.tuples[type][path].value === 'undefined') {
+              throw common.err('Reducer `value` undefined',
+                               'ReducerError:ValueUndefined');
+            }
             return cb_(null, 
                        my.tuples[type][path].value,
                        my.tuples[type][path].oplog);
@@ -262,6 +266,10 @@ var store = function(spec, my) {
         try {
           my.tuples[type][path].value = 
             my.registry[type](my.tuples[type][path].oplog);
+          if(typeof my.tuples[type][path].value === 'undefined') {
+            throw common.err('Reducer `value` undefined',
+                             'ReducerError:ValueUndefined');
+          }
         }
         catch(err) {
           return cb_(err);

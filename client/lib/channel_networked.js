@@ -205,7 +205,8 @@ var channel_networked = function(spec, my) {
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].get(type, path, function(err, value) {
         if(err) {
-          if(err.name === 'StoreError:TypeNotRegistered') {
+          if(err.name === 'ReducerError:TypeNotRegistered' ||
+             err.name === 'ReducerError:ValueUndefined') {
             return scb_(err);
           }
           common.log.error(err);
@@ -247,7 +248,8 @@ var channel_networked = function(spec, my) {
     async.each(Object.keys(my.stores), function(s, scb_) {
       my.stores[s].push(type, path, op, function(err, value) {
         if(err) {
-          if(err.name === 'StoreError:TypeNotRegistered') {
+          if(err.name === 'ReducerError:TypeNotRegistered' ||
+             err.name === 'ReducerError:ValueUndefined') {
             return scb_(err);
           }
           common.log.error(err);

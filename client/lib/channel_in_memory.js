@@ -68,7 +68,7 @@ var channel_in_memory = function(spec, my) {
   get = function(type, path, cb_) {
     if(!my.registry[type]) {
       return cb_(common.err('Type not registered: ' + type,
-                            'StoreError:TypeNotRegistered'));
+                            'ReducerError:TypeNotRegistered'));
     }
     var htp = common.hash([type, path]);
     
@@ -81,8 +81,19 @@ var channel_in_memory = function(spec, my) {
                              JSON.stringify(op.value) ]);
       my.memory[htp] = [op];
     }
+    var value = null;
+    try {
+      value = my.registry[type](my.memory[htp]);
+      if(typeof value === 'undefined') {
+        throw common.err('Reducer `value` undefined',
+                         'ReducerError:ValueUndefined');
+      }
+    }
+    catch(err) {
+      return cb_(err);
+    }
 
-    return cb_(null, my.registry[type](my.memory[htp]));
+    return cb_(null, value);
   };
 
   // ### push
@@ -97,7 +108,7 @@ var channel_in_memory = function(spec, my) {
   push = function(type, path, op, cb_) {
     if(!my.registry[type]) {
       return cb_(common.err('Type not registered: ' + type,
-                            'StoreError:TypeNotRegistered'));
+                            'ReducerError:TypeNotRegistered'));
     }
     var htp = common.hash([type, path]);
     
@@ -116,7 +127,18 @@ var channel_in_memory = function(spec, my) {
       return o1.date - o2.date;
     });
 
-    var value = my.registry[type](my.memory[htp]);
+    var value = null;
+    try {
+      value = my.registry[type](my.memory[htp]);
+      if(typeof value === 'undefined') {
+        throw common.err('Reducer `value` undefined',
+                         'ReducerError:ValueUndefined');
+      }
+    }
+    catch(err) {
+      return cb_(err);
+    }
+
     var pruning_op = {
       date: Date.now(),
       value: value

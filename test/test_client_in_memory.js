@@ -33,14 +33,14 @@ exports.no_reducer = function(test) {
   async.series([
     function(cb_) {
       _gig.get(channel, 'test', '/foo/bar', function(err, value) {
-        test.equal(err.name, 'StoreError:TypeNotRegistered');
+        test.equal(err.name, 'ReducerError:TypeNotRegistered');
         test.equal(value, undefined);
         return cb_();
       });
     },
     function(cb_) {
       _gig.push(channel, 'test', '/foo/bar', { foo: 'bar' },  function(err, value) {
-        test.equal(err.name, 'StoreError:TypeNotRegistered');
+        test.equal(err.name, 'ReducerError:TypeNotRegistered');
         test.equal(value, undefined);
         return cb_();
       });
