@@ -104,7 +104,7 @@ async.series([
     console.log(err);
     process.exit(1);
   }
-  console.log('TABLE_URL: ' + table_url + 'user/' + user_id);
+  console.log('TABLE_URL: ' + table_url + 'user/' + user_id + '/');
   console.log('MASTER: ' + master);
   console.log('CHANNEL: ' + channel);
   process.exit(0);
