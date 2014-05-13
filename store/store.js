@@ -23,8 +23,8 @@ var access = require('../lib/access.js').access({});
 
 var setup = function() {
   /* App Configuration */
-  if(process.env['TEABAG_STORE_KEY']) {
-    common.KEY = process.env['TEABAG_STORE_KEY'];
+  if(process.env['GIGFS_STORE_KEY']) {
+    common.KEY = process.env['GIGFS_STORE_KEY'];
     common.log.out('[KEY]: ' + common.KEY);
   }
 
@@ -61,8 +61,8 @@ common.log.out('gig_store [Started]');
 /* Setup */
 setup();
 
-common.PORT = process.env['TEABAG_STORE_PORT'] ?
-  parseInt(process.env['TEABAG_STORE_PORT'], 10) : 0;
+common.PORT = process.env['GIGFS_STORE_PORT'] ?
+  parseInt(process.env['GIGFS_STORE_PORT'], 10) : 0;
 
 var http_srv = http.createServer(app).listen(common.PORT);
 

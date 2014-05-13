@@ -28,8 +28,10 @@ exports.setUp = function(cb_) {
     },
     function(cb_) {
       _gig = require('../client/index.js').gig({
-        table_url: _int.table.url,
-        session_token: _session.session_token
+        remote_table: {
+          table_url: _int.table.url,
+          session_token: _session.session_token
+        }
       });
       _gig.init(cb_);
     }

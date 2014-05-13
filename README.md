@@ -154,9 +154,9 @@ GET  /user/:user_id/table/:channel
 GET  /user/:user_id/table/check/:store_token
 
 Storage:
-- user's master: $TEABAG_DATA/:salt/:user/user.json
-- user's tokens: $TEABAG_DATA/:salt/:user/sessions.json
-- user's table: $TEABAG_DATA/:salt/:user/table.json
+- user's master: $GIGFS_DATA/:salt/:user/user.json
+- user's tokens: $GIGFS_DATA/:salt/:user/sessions.json
+- user's table: $GIGFS_DATA/:salt/:user/table.json
 
 ```
 
@@ -197,8 +197,8 @@ GET  {BASE_URL}/oplog/stream
      store_token, [reg_id]
 
 Storage:
-- user's meta:   $TEABAG_DATA/:salt/:user/user.json
-- user's data:   $TEABAG_DATA/:salt/:user/root/:type/...[path]...
+- user's meta:   $GIGFS_DATA/:salt/:user/user.json
+- user's data:   $GIGFS_DATA/:salt/:user/root/:type/...[path]...
 
 TODO: BLOB Storage
 ```
