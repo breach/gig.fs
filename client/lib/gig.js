@@ -21,17 +21,16 @@ var common = require('../../lib/common.js');
 
 // ## gig
 //
-// GiG.fs Client API is constructed with a `table_url` and a `session_token` to
-// access the table or the object `in_memory`.
+// GiG.fs client API is constructed with a remote_table object (`table_url` and
+// `session_token`) and a `local_table` object (store characteristics for each
+// channel handled locally).
 //
-// If `in_memory` is defined then the client will run entirely in memory and the
-// `in_memory_channels` array will be used to know which channels to expose. In 
-// `in_memory` mode, nothing is persisted and everything gets deleted upon
-// destruction of the `gig` object.
+// Local stores can be persistent if a `local_path` is defined or in memory
+// otherwise.
 //
 // ```
-// @spec { table_url, session_token, 
-//         in_memory, in_memory_channels }
+// @spec { remote_table: { table_url, session_token },
+//         local_table: { channel: [ { local_path } ] } }
 // ```
 var gig = function(spec, my) {
   my = my || {};
