@@ -1,4 +1,4 @@
 node_modules
 *~
 .*.swp
-GIGFS_DATA
+GIGFS_*

@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-02-19 spolu  Creation
  */
 "use strict";
@@ -28,17 +29,17 @@ var storage = require('../../lib/storage.js').storage({});
 // @cb_     {function(err), user}
 // ```
 exports.user_create = function(user_id, cb_) {
-  storage.get(user_id, 'user.json', function(err, json) {
+  storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
     if(err && err.code === 'ENOENT') {
       async.parallel({
         'user.json': function(cb_) {
-          return storage.put(user_id, 'user.json', {}, cb_);
+          return storage.put(storage.prefix(user_id) + 'user.json', {}, cb_);
         },
         'sessions.json': function(cb_) {
-          return storage.put(user_id, 'sessions.json', [], cb_);
+          return storage.put(storage.prefix(user_id) + 'sessions.json', [], cb_);
         },
         'table.json': function(cb_) {
-          return storage.put(user_id, 'table.json', {}, cb_);
+          return storage.put(storage.prefix(user_id) + 'table.json', {}, cb_);
         }
       }, function(err) {
         return cb_(err, {});
@@ -84,11 +85,11 @@ exports.put_master = function(req, res, next) {
     function(cb_) {
       user.master = master;
       user.user_id = user_id;
-      return storage.put(user_id, 'user.json', user, cb_);
+      return storage.put(storage.prefix(user_id) + 'user.json', user, cb_);
     },
     function(cb_) {
       /* Revokes all sessions. */
-      return storage.put(user_id, 'sessions.json', [], cb_);
+      return storage.put(storage.prefix(user_id) + 'sessions.json', [], cb_);
     }
   ], function(err) {
     if(err) {

@@ -1,11 +1,12 @@
 /**
- * GiG.fs: channel.js
+ * GiG.fs: store.js
  *
  * Copyright (c) 2014, Stanislas Polu. All rights reserved.
  *
  * @author: spolu
  *
  * @log:
+ * - 2014-05-13 spolu  `local_table/remote_table` API
  * - 2014-04-04 spolu   Add `kill` method
  * - 2014-03-20 spolu   Use `request` package
  * - 2014-03-05 spolu   Creation (on a plane!)
@@ -22,16 +23,14 @@ var common = require('../../lib/common.js');
 
 // ## store
 //
-// GiG.fs Client Channel Object
+// GiG.fs Client Store Object
 //
 // The store object interfaces the gig.fs client with the stores associated
 // with the different channels it uses. The store object shows the actual state
 // of the store and may not reflect the last known state for a given channel.
 // (eg. no connection)
 //
-// The store object starts by connecting to the oplog stream of the store it is
-// in charge of. Oplog events are filtered to the (type, path) tuples it
-// already interacted with. It uses long-polling
+// Stores can be local (persistent or in memory) or remotes (store URL).
 //
 // An operation is made of a date, a hash and a payload:
 // ```
@@ -49,13 +48,9 @@ var store = function(spec, my) {
   spec = spec || {};
   var _super = {};        
 
-
   my.id = spec.id;
   my.json = spec.json || {};
-  my.store_token = my.json.store_token;
   my.registry = spec.registry;
-
-  my.tuples = {};
 
   my.killed = false;
 
@@ -68,12 +63,9 @@ var store = function(spec, my) {
   var get;       /* get(type, path, cb_); */
   var push;      /* push(type, path, op, cb_(err, value)); */
 
-  var url;       /* url(); */
-
   //
   // #### _private_ 
   //
-  var long_poll; /* long_poll(); */
   
   //
   // #### _that_
@@ -83,74 +75,10 @@ var store = function(spec, my) {
   /****************************************************************************/
   /* PRIVATE HELPERS */
   /****************************************************************************/
-  // ### long_poll
-  //
-  // Runs the long polling on the store oplog stream endpoint. The long polling
-  // is resilient to network errors
-  long_poll = function() {
-    if(my.killed)
-      return;
-
-    var handle_error = function(err) {
-      common.log.error(err);
-      my.lp_itv = setTimeout(long_poll, 1000);
-    }
-
-    var stream_url = my.store_url + 'oplog/stream' + 
-      '?store_token=' + my.store_token;
-
-    if(my.reg_id) {
-      stream_url += '&reg_id=' + my.reg_id;
-    }
-
-    my.lp_req = request.get({
-      url: stream_url,
-      json: true
-    }, function(err, res, data) {
-      my.lp_req = null;
-      if(err) {
-        return handle_error(err);
-      }
-      if(res.statusCode === 200 && data && !data.error) {
-        if(data.reg_id) {
-          my.reg_id = data.reg_id;
-        }
-        /* We push the values on the local oplog and emit an update event. */
-        /* This means that the sync & prune need not be triggered by the   */
-        /* original push as it will be triggered here.                     */
-        async.eachSeries(data.stream, function(data, cb_) {
-          /* If the op originated from this node, this push will be entirely */
-          /* cached and won't mutate the state.                              */
-          that.push(data.type, data.path, data.op, cb_);
-        }, function(err) {
-          /* The only error possible here is if the reducer failed so we just */
-          /* ignore it as there's not much we can do from here.               */
-        });
-
-        return long_poll();
-      }
-      else {
-        var err = common.err('Store stream error: ' + stream_url,
-                             'StoreError:StreamError');
-        if(data && data.error) {
-          err = common.err(data.error.message,
-                           data.error.name);
-        }
-        return handle_error(err);
-      }
-    });
-  };
   
   /****************************************************************************/
   /* PUBLIC METHODS */
   /****************************************************************************/
-  // ### url
-  //
-  // Returns the store url
-  url = function() {
-    return my.json.url || null;
-  };
-
 
   // ### get
   //
@@ -162,56 +90,8 @@ var store = function(spec, my) {
   // @cb_  {function(err, value, oplog)} callback
   // ```
   get = function(type, path, cb_) {
-    if(!my.registry[type]) {
-      return cb_(common.err('Type not registered: ' + type,
-                            'ReducerError:TypeNotRegistered'));
-    }
-    if(my.tuples[type] && my.tuples[type][path]) {
-      return cb_(null, 
-                 my.tuples[type][path].value,
-                 my.tuples[type][path].oplog);
-    }
-    else {
-      var oplog_url = my.store_url + 'oplog' + '?type=' + type + 
-        '&path=' + escape(path) + '&store_token=' + my.store_token;
-
-      request.get({
-        url: oplog_url,
-        json: true
-      }, function(err, res, oplog) {
-        if(err) {
-          return cb_(err);
-        }
-        if(Array.isArray(oplog)) {
-          try {
-            my.tuples[type] = my.tuples[type] || {};
-            my.tuples[type][path] = {
-              oplog: oplog,
-              value: my.registry[type](oplog)
-            };
-            if(typeof my.tuples[type][path].value === 'undefined') {
-              throw common.err('Reducer `value` undefined',
-                               'ReducerError:ValueUndefined');
-            }
-            return cb_(null, 
-                       my.tuples[type][path].value,
-                       my.tuples[type][path].oplog);
-          }
-          catch(err) {
-            return cb_(err);
-          }
-        }
-        else {
-          var err = common.err('Store oplog error: ' + oplog_url,
-                               'StoreError:OplogError');
-          if(oplog && oplog.error) {
-            err = common.err(oplog.error.message,
-                             oplog.error.name);
-          }
-          return cb_(err);
-        }
-      });
-    }
+    return cb_(common.err('`get` Must be implemented',
+                          'StoreError:ImplementationMissing'));
   };
 
   // ### push
@@ -229,135 +109,33 @@ var store = function(spec, my) {
   // @cb_  {function(err, value, noop)} callback
   // ```
   push = function(type, path, op, cb_) {
-    var noop = false;
-    async.series([
-      function(cb_) {
-        get(type, path, cb_);
-      },
-      function(cb_) {
-        /* NOOP Detection */
-        for(var i = 0; i < my.tuples[type][path].oplog.length; i ++) {
-          if(op.sha === my.tuples[type][path].oplog[i].sha ||
-             (my.tuples[type][path].oplog[i].value &&
-              my.tuples[type][path].oplog[i].date > op.date)) {
-            noop = true;
-            common.log.out('NOOP: ' + op.sha);
-            return cb_();
-          }
-        }
-        /* Insertion / Sorting */
-        my.tuples[type][path].oplog.push(op);
-        my.tuples[type][path].oplog.sort(function(o1, o2) {
-          return o1.date - o2.date;
-        });
-        /* Pruning */
-        var i = 0;
-        for(i = my.tuples[type][path].oplog.length - 1; i >= 0; i--) {
-          if(my.tuples[type][path].oplog[i].value && i > 0) {
-            break
-          }
-        }
-        if(i > 0) {
-          common.log.out('PRUNING: ' + my.tuples[type][path].oplog[i].sha + 
-                         ' '  + i + ' / ' + my.tuples[type][path].oplog.length);
-          my.tuples[type][path].oplog.splice(0, i);
-        }
-
-        try {
-          my.tuples[type][path].value = 
-            my.registry[type](my.tuples[type][path].oplog);
-          if(typeof my.tuples[type][path].value === 'undefined') {
-            throw common.err('Reducer `value` undefined',
-                             'ReducerError:ValueUndefined');
-          }
-        }
-        catch(err) {
-          return cb_(err);
-        }
-        return cb_();
-      }
-    ], function(err) {
-      if(err) {
-        return cb_(err);
-      }
-      /* We return the callback as soon as the op is pushed in memory. */
-      cb_(null, my.tuples[type][path].value, noop);
-
-      if(!noop) {
-        /* This is not a NOOP so we emit an mutate event for syncpruning. */
-        that.emit('mutate', type, path, my.tuples[type][path].value);
-
-        var oplog_url = my.store_url + 'oplog' + '?type=' + type + 
-          '&path=' + escape(path) + '&store_token=' + my.store_token;
-
-        request.post({
-          url: oplog_url,
-          json: op
-        }, function(err, res, json) {
-          /* We can't provide feedback here but we'll print errors. */
-          if(err) {
-            common.log.error(err);
-          }
-          if(res.statusCode !== 200 || !json.ok) {
-            var err = common.err('Store oplog error: ' + oplog_url,
-                                 'StoreError:OplogError');
-            if(json && json.error) {
-              err = common.err(json.error.message,
-                               json.error.name);
-            }
-            common.log.error(err);
-          }
-        });
-      }
-    });
+    return cb_(common.err('`push` Must be implemented',
+                          'StoreError:ImplementationMissing'));
   };
 
   // ### init
   //
-  // Inits the channel by connecting to its oplog stream. This is a long-polling
-  // connection resilient to deconnexions and errors.
+  // Basic initialisation
   // ```
   // @cb_ {function(err)}
   // ```
   init = function(cb_) {
-    var url_p = require('url').parse(my.json.url || '');
-    if((url_p.protocol !== 'http:' && url_p.protocol !== 'https:') ||
-       url_p.query || url_p.search || 
-       !url_p.path || url_p.path[url_p.path.length - 1] !== '/') {
-      return cb_(common.err('Invalid store URL: ' + my.json.url,
-                            'StoreError:InvalidUrl'));
-    }
-
-    my.store_url = url_p.href;
-    long_poll();
-
     common.log.debug('STORE [' + my.id + '] Initialization');
     return cb_();
   };
 
   // ### kill
   //
-  // Cleans-up and terminates this store (and all long-poll connections)
-  //
+  // Cleans up event handlers and mark this sotre as killed.
   // ```
   // @cb_ {function(err)}
   // ```
   kill = function(cb_) {
     that.removeAllListeners();
     my.killed = true;
-    if(my.lp_req) {
-      my.lp_req.abort();
-      my.lp_req = null;
-    }
-    if(my.lp_itv) {
-      clearTimeout(my.lp_itv);
-      my.lp_itv = null;
-    }
     return cb_();
   };
 
-
-  common.method(that, 'url', url, _super);
 
   common.method(that, 'init', init, _super);
   common.method(that, 'kill', kill, _super);

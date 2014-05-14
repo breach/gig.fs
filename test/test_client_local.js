@@ -1,16 +1,31 @@
 var common = require('../lib/common.js');
 var async = require('async');
+var rimraf = require('rimraf');
 
 var _gig = null;
 
 exports.setUp = function(cb_) {
   var TIMEOUT = 1000 * 60;
 
-  _gig = require('../client/index.js').gig({
-    in_memory: true,
-    in_memory_channels: ['test']
-  });
-  _gig.init(cb_);
+  var storage_path = require('path').join(process.cwd(), 'GIGFS_STORAGE_PATH');
+  
+  async.series([
+    function(cb_) {
+      rimraf(storage_path, cb_);
+    },
+    function(cb_) {
+      _gig = require('../client/index.js').gig({
+        local_table: {
+          'test': [ {
+            in_memory: true
+          }, {
+            storage_path: storage_path
+          } ]
+        }
+      });
+      _gig.init(cb_);
+    }
+  ], cb_);
 };
 
 exports.tearDown = function(cb_) {
@@ -21,8 +36,9 @@ exports.table_api = function(test) {
   var channel = 'test';
 
   test.deepEqual(_gig.channels(), [channel]);
-  test.ok(typeof _gig.channel(channel).stores === 'undefined');
-  test.ok(typeof _gig.channel(channel).store === 'undefined');
+  test.ok(_gig.channel(channel).stores().length === 2);
+  test.ok(typeof _gig.channel(channel).store(_gig.channel(channel).stores()[1]).storage_path() !== 'undefined');
+  test.ok(_gig.channel(channel).store(_gig.channel(channel).stores()[0]).in_memory());
  
   return test.done();
 };

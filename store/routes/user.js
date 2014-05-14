@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-02-28 spolu  Updated `code` format
  * - 2014-02-26 spolu  Creation
  */
@@ -64,7 +65,7 @@ exports.post_confirm = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         user = json;
         return cb_(err);
       });
@@ -103,7 +104,7 @@ exports.post_confirm = function(req, res, next) {
         url: table_url,
         created_time: Date.now()
       };
-      return storage.put(user_id, 'user.json', user, cb_);
+      return storage.put(storage.prefix(user_id) + 'user.json', user, cb_);
     },
   ], function(err) {
     if(err) {
@@ -186,7 +187,8 @@ exports.post_oplog = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      storage.lock(user_id, '/root/' + type + '/' + path, function(rel_) {
+      storage.lock(storage.prefix(user_id) + 'root/' + type + '/' + path, 
+                   function(rel_) {
         release = rel_;
         return cb_();
       });
@@ -195,7 +197,7 @@ exports.post_oplog = function(req, res, next) {
       tokens_cache.check(user_id, store_token, cb_);
     },
     function(cb_) {
-      storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
+      storage.get(storage.prefix(user_id) + 'root/' + type + '/' + path, function(err, json) {
         if(err) {
           if(err.code === 'ENOENT') {
             oplog = exports.empty_oplog();
@@ -237,7 +239,7 @@ exports.post_oplog = function(req, res, next) {
         oplog.splice(0, i);
       }
 
-      return storage.put(user_id, 
+      return storage.put(storage.prefix(user_id) +
                          '/root/' + type + '/' + path, 
                          oplog, 
                          cb_);
@@ -291,7 +293,8 @@ exports.get_oplog = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      storage.lock(user_id, '/root/' + type + '/' + path, function(rel_) {
+      storage.lock(storage.prefix(user_id) + 'root/' + type + '/' + path, 
+                   function(rel_) {
         release = rel_;
         return cb_();
       });
@@ -300,7 +303,8 @@ exports.get_oplog = function(req, res, next) {
       tokens_cache.check(user_id, store_token, cb_);
     },
     function(cb_) {
-      storage.get(user_id, '/root/' + type + '/' + path, function(err, json) {
+      storage.get(storage.prefix(user_id) + 'root/' + type + '/' + path, 
+                  function(err, json) {
         if(err) {
           if(err.code === 'ENOENT') {
             oplog = exports.empty_oplog();

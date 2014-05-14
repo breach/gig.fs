@@ -285,14 +285,18 @@ var channel = function(spec, my) {
   init = function(cb_) {
     async.each(Object.keys(my.json), function(s, cb_) {
       if(my.json[s].type === 'remote') {
-        my.stores[s] = require('./store.js').store({
+        my.stores[s] = require('./store_remote.js').store_remote({
           id: s,
           json: my.json[s],
           registry: my.registry
         });
       }
       else {
-        return cb_(new Error('Not Implemented'));
+        my.stores[s] = require('./store_local.js').store_local({
+          id: s,
+          json: my.json[s],
+          registry: my.registry
+        });
       }
       my.stores[s].init(cb_);
 

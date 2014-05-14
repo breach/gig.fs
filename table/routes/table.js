@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-04-07 spolu  Introduce `store_token`
  * - 2014-03-20 spolu  Use `request` package
  * - 2014-02-28 spolu  Allow table access with token
@@ -105,13 +106,13 @@ exports.post_channel_store = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(storage.prefix(user_id) + 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         table[channel] = table[channel] || {};
         table[channel][store.store_id] = store;
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(storage.prefix(user_id) + 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -157,14 +158,14 @@ exports.del_channel_store = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(storage.prefix(user_id) + 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         if(table[channel]) {
           delete table[channel][store_id];
         }
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(storage.prefix(user_id) + 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -204,12 +205,12 @@ exports.del_channel = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, table) {
+      storage.get(storage.prefix(user_id) + 'table.json', function(err, table) {
         if(err) {
           return cb_(err);
         }
         delete table[channel];
-        return storage.put(user_id, 'table.json', table, cb_);
+        return storage.put(storage.prefix(user_id) + 'table.json', table, cb_);
       });
     }
   ], function(err) {
@@ -262,7 +263,7 @@ exports.get_table = function(req, res, next) {
       }
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, json) {
+      storage.get(storage.prefix(user_id) +'table.json', function(err, json) {
         if(err) {
           return cb_(err);
         }
@@ -333,7 +334,7 @@ exports.get_channel = function(req, res, next) {
       }
     },
     function(cb_) {
-      storage.get(user_id, 'table.json', function(err, t) {
+      storage.get(storage.prefix(user_id) + 'table.json', function(err, t) {
         if(err) {
           return cb_(err);
         }

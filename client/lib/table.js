@@ -151,7 +151,7 @@ var table = function(spec, my) {
                 spec.local[c].forEach(function(s) {
                   var store_id = common.hash([
                     c, 
-                    (s.local_path || ''), 
+                    (s.storage_path || ''), 
                     s.in_memory.toString()
                   ]);
                   my.json[c][store_id] = s;
@@ -165,7 +165,7 @@ var table = function(spec, my) {
         ], cb_);
       },
       function(cb_) {
-        console.log(my.json);
+        //console.log(my.json);
         async.each(Object.keys(my.json), function(c, cb_) {
           my.channels[c] = require('./channel.js').channel({
             name: c,

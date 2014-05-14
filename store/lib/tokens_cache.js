@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-04-07 spolu  Introduce `store_token`
  * - 2014-03-19 spolu  Creation
  */
@@ -118,7 +119,8 @@ var tokens_cache = function(spec, my) {
     async.series([
       function(cb_) {
         /* We retrieve the `table_url` for the requested `user_id`. */
-        storage.get(exp.user_id, 'user.json', function(err, json) {
+        storage.get(storage.prefix(exp.user_id) + 'user.json', 
+                    function(err, json) {
           if(err) {
             return cb_(err);
           }

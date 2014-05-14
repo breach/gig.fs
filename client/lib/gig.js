@@ -26,12 +26,12 @@ var common = require('../../lib/common.js');
 // `session_token`) and a `local_table` object (store characteristics for each
 // channel handled locally).
 //
-// Local stores can be persistent if a `local_path` is defined or in memory
+// Local stores can be persistent if a `storage_path` is defined or in memory
 // otherwise.
 //
 // ```
 // @spec { remote_table: { table_url, session_token },
-//         local_table: { channel: [ { local_path } ] } }
+//         local_table: { channel: [ { storage_path } ] } }
 // ```
 var gig = function(spec, my) {
   my = my || {};
@@ -58,8 +58,8 @@ var gig = function(spec, my) {
       my.local_table[c] = [];
       spec.local_table[c].forEach(function(s) {
         my.local_table[c].push({
-          local_path: s.local_path || null,
-          in_memory: s.local_path ? false : true
+          storage_path: s.storage_path || null,
+          in_memory: s.storage_path ? false : true
         });
       });
     });
