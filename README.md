@@ -78,7 +78,7 @@ as well as attributes for these stores (`in_memory` or `local_path`);
 ```
 local_table: {
   core: [
-    { local_path: '/home/spolu/...' }
+    { storage_path: '/home/spolu/...' }
   ],
   modules: [
     { in_memory: true }
@@ -208,11 +208,8 @@ GiG.fs Client
 
 ```
 var cli = require('gig.fs').gig({
-  remote_table: {
-    session_token: '...',
-    
-  session_token: '...',
-  url: '...',
+  remote_table: { table_url, session_token },
+  local_table: { channel: [ { storage_path } ] } 
 });
 
 cli.init(cb_());
