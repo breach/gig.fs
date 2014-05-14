@@ -26,8 +26,8 @@ var access = require('../lib/access.js').access({});
 
 var setup = function() {
   /* App Configuration */
-  if(process.env['TEABAG_TABLE_KEY']) {
-    common.KEY = process.env['TEABAG_TABLE_KEY'];
+  if(process.env['GIGFS_TABLE_KEY']) {
+    common.KEY = process.env['GIGFS_TABLE_KEY'];
     common.log.out('[KEY]: ' + common.KEY);
   }
 
@@ -69,8 +69,8 @@ common.log.out('gig_table [Started]');
 /* Setup */
 setup();
 
-common.PORT = process.env['TEABAG_TABLE_PORT'] ?
-  parseInt(process.env['TEABAG_TABLE_PORT'], 10) : 0;
+common.PORT = process.env['GIGFS_TABLE_PORT'] ?
+  parseInt(process.env['GIGFS_TABLE_PORT'], 10) : 0;
 
 var http_srv = http.createServer(app).listen(common.PORT);
 common.log.out('HTTP Server started on port: ' + common.PORT);
@@ -79,8 +79,8 @@ http_srv.on('listening', function() {
   common.PORT = http_srv.address().port;
   common.log.out('[TABLE_PORT]: ' + common.PORT);
 
-  common.BASE_URL = process.env['TEABAG_TABLE_URL'] ? 
-    process.env['TEABAG_TABLE_URL'] : 'http://localhost:' + common.PORT + '/'
+  common.BASE_URL = process.env['GIGFS_TABLE_URL'] ? 
+    process.env['GIGFS_TABLE_URL'] : 'http://localhost:' + common.PORT + '/'
   common.log.out('[TABLE_URL]: ' + common.BASE_URL);
 
   if(process.send) {

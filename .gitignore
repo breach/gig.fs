@@ -1,4 +1,4 @@
 node_modules
 *~
 .*.swp
-TEABAG_DATA
+GIGFS_*

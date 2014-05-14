@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-04-07 spolu  Introduce `session_token` [token.js -> session.js]
  * - 2014-02-28 spolu  Added `token/all' route
  * - 2014-02-28 spolu  Removed `master` requirement for token deletion
@@ -56,7 +57,8 @@ exports.get_session_new = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, sessions) {
+      storage.get(storage.prefix(user_id) + 'sessions.json', 
+                  function(err, sessions) {
         if(err) {
           return cb_(err);
         }
@@ -73,7 +75,8 @@ exports.get_session_new = function(req, res, next) {
         });
         sessions.push(session);
 
-        return storage.put(user_id, 'sessions.json', sessions, cb_);
+        return storage.put(storage.prefix(user_id) + 'sessions.json', sessions, 
+                           cb_);
       });
     }
   ], function(err) {
@@ -107,7 +110,8 @@ exports.get_session_all = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'sessions.json', 
+                  function(err, json) {
         if(err) {
           return cb_(err);
         }
@@ -142,7 +146,7 @@ exports.del_session = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         if(err && err.code === 'ENOENT') {
           return cb_(common.err('User Not Found: ' + user_id,
                                 'SessionError:UserNotFound'));
@@ -152,7 +156,8 @@ exports.del_session = function(req, res, next) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, sessions) {
+      storage.get(storage.prefix(user_id) + 'sessions.json', 
+                  function(err, sessions) {
         if(err && err.code === 'ENOENT') {
           return cb_(common.err('User Not Found: ' + user_id,
                                 'SessionError:UserNotFound'));
@@ -171,7 +176,8 @@ exports.del_session = function(req, res, next) {
           return true;
         });
 
-        return storage.put(user_id, 'sessions.json', sessions, cb_);
+        return storage.put(storage.prefix(user_id) + 'sessions.json', sessions, 
+                           cb_);
       });
     }
   ], function(err) {

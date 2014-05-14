@@ -6,8 +6,13 @@
 
 DONE: 
 
->>v0.1.2<<
+>>v0.2<<
 
+- `local_table` support
+
+>>v0.1<<
+
+- `in_memory` mode
 - Add `client` kill
 - Add table API to client
 - Write Initial Test Suite 

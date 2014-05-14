@@ -68,6 +68,25 @@ Session Tokens:
 - Revoking the session on the table will revoke the `store_tokens` on each store
   as well.
 
+Non-Connected Mode:
+-------------------
+GiG.fs is capable to operate without remote connection. This is done by
+specifying a `local_table` that gets merged with any remote table found. GiG.fs
+can entirely operate with solely the local table for fully local operations.
+The local table specifies the channels where a local store may be participating
+as well as attributes for these stores (`in_memory` or `local_path`);
+```
+local_table: {
+  core: [
+    { local_path: '/home/spolu/...' }
+  ],
+  modules: [
+    { in_memory: true }
+  ]
+}
+```
+
+
 Conflict Resolution:
 --------------------
 ```
@@ -135,9 +154,9 @@ GET  /user/:user_id/table/:channel
 GET  /user/:user_id/table/check/:store_token
 
 Storage:
-- user's master: $TEABAG_DATA/:salt/:user/user.json
-- user's tokens: $TEABAG_DATA/:salt/:user/sessions.json
-- user's table: $TEABAG_DATA/:salt/:user/table.json
+- user's master: $GIGFS_DATA/:salt/:user/user.json
+- user's tokens: $GIGFS_DATA/:salt/:user/sessions.json
+- user's table: $GIGFS_DATA/:salt/:user/table.json
 
 ```
 
@@ -178,8 +197,8 @@ GET  {BASE_URL}/oplog/stream
      store_token, [reg_id]
 
 Storage:
-- user's meta:   $TEABAG_DATA/:salt/:user/user.json
-- user's data:   $TEABAG_DATA/:salt/:user/root/:type/...[path]...
+- user's meta:   $GIGFS_DATA/:salt/:user/user.json
+- user's data:   $GIGFS_DATA/:salt/:user/root/:type/...[path]...
 
 TODO: BLOB Storage
 ```
@@ -189,8 +208,11 @@ GiG.fs Client
 
 ```
 var cli = require('gig.fs').gig({
+  remote_table: {
+    session_token: '...',
+    
   session_token: '...',
-  url: '...'
+  url: '...',
 });
 
 cli.init(cb_());

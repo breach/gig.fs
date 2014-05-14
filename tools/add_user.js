@@ -1,14 +1,14 @@
 var request = require('request');
 var async = require('async');
 
-var table_port = process.env['TEABAG_TABLE_PORT'];
-var store_port = process.env['TEABAG_STORE_PORT']
+var table_port = process.env['GIGFS_TABLE_PORT'];
+var store_port = process.env['GIGFS_STORE_PORT']
 
-var table_url = process.env['TEABAG_TABLE_URL'];
-var store_url = process.env['TEABAG_STORE_URL'];
+var table_url = process.env['GIGFS_TABLE_URL'];
+var store_url = process.env['GIGFS_STORE_URL'];
 
-var table_key = process.env['TEABAG_TABLE_KEY'];
-var store_key = process.env['TEABAG_STORE_KEY'];
+var table_key = process.env['GIGFS_TABLE_KEY'];
+var store_key = process.env['GIGFS_STORE_KEY'];
 
 var user_id = parseInt(process.argv[2], 10);
 var master = process.argv[3];

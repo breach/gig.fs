@@ -25,7 +25,7 @@ exports.table_setup = function(silent, cb_) {
     url: 'http://localhost:4000/user/' + my.user.id + '/',
     port: 4000,
     key: 'gig_table_test_key',
-    data_path: path.join(__dirname, 'TEABAG_DATA_TEST_TABLE')
+    data_path: path.join(__dirname, 'GIGFS_DATA_TEST_TABLE')
   };
 
   async.series([
@@ -33,9 +33,9 @@ exports.table_setup = function(silent, cb_) {
       rimraf(my.table.data_path, function(err) {
         my.table.process = require('child_process').fork(path.join(__dirname, '../table/table.js'), [], {
           env: {
-            'TEABAG_TABLE_KEY': my.table.key,
-            'TEABAG_TABLE_PORT': my.table.port,
-            'TEABAG_DATA': my.table.data_path
+            'GIGFS_TABLE_KEY': my.table.key,
+            'GIGFS_TABLE_PORT': my.table.port,
+            'GIGFS_DATA': my.table.data_path
           },
           silent: silent
         });
@@ -111,7 +111,7 @@ exports.store_setup = function(silent, cb_) {
     url: 'http://localhost:' + (4001 + my.store_count) + '/user/' + my.user.id + '/',
     port: 4001 + my.store_count,
     key: 'gig_store_test_key_' + my.store_count,
-    data_path: path.join(__dirname, 'TEABAG_DATA_TEST_STORE_' + my.store_count),
+    data_path: path.join(__dirname, 'GIGFS_DATA_TEST_STORE_' + my.store_count),
     index: my.store_count
   };
   
@@ -120,9 +120,9 @@ exports.store_setup = function(silent, cb_) {
       rimraf(store.data_path, function(err) {
         store.process = require('child_process').fork(path.join(__dirname, '../store/store.js'), [], {
           env: {
-            'TEABAG_STORE_KEY': store.key,
-            'TEABAG_STORE_PORT': store.port,
-            'TEABAG_DATA': store.data_path
+            'GIGFS_STORE_KEY': store.key,
+            'GIGFS_STORE_PORT': store.port,
+            'GIGFS_DATA': store.data_path
           },
           silent: silent
         });

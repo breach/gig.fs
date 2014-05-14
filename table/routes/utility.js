@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-04-07 spolu  Introduce `session_token`
  * - 2014-02-28 spolu  Updated token check
  * - 2014-02-28 spolu  Creation
@@ -33,7 +34,7 @@ exports.user_master_check = function(user_id, master, cb_) {
   var user = null;
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         if(err && err.code === 'ENOENT') {
           return cb_(common.err('User Not Found: ' + user_id,
                                 'UtilityError:UserNotFound'));
@@ -73,7 +74,7 @@ exports.user_session_token_check = function(user_id, session_token, cb_) {
 
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         if(err && err.code === 'ENOENT') {
           return cb_(common.err('User Not Found: ' + user_id,
                                 'UtilityError:UserNotFound'));
@@ -83,7 +84,8 @@ exports.user_session_token_check = function(user_id, session_token, cb_) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, sessions) {
+      storage.get(storage.prefix(user_id) + 'sessions.json', 
+                  function(err, sessions) {
         if(err) {
           return cb_(err);
         }
@@ -103,7 +105,8 @@ exports.user_session_token_check = function(user_id, session_token, cb_) {
 
         /* We write back the sessions as we updated the `last_check` or */
         /* filtered outdated sessions.                                  */
-        return storage.put(user_id, 'sessions.json', sessions, cb_);
+        return storage.put(storage.prefix(user_id) + 'sessions.json', sessions, 
+                           cb_);
       });
     }
   ], function(err) {
@@ -135,7 +138,7 @@ exports.user_store_token_check = function(user_id, store_token, cb_) {
 
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         if(err && err.code === 'ENOENT') {
           return cb_(common.err('User Not Found: ' + user_id,
                                 'UtilityError:UserNotFound'));
@@ -145,7 +148,8 @@ exports.user_store_token_check = function(user_id, store_token, cb_) {
       });
     },
     function(cb_) {
-      storage.get(user_id, 'sessions.json', function(err, sessions) {
+      storage.get(storage.prefix(user_id) + 'sessions.json', 
+                  function(err, sessions) {
         if(err) {
           return cb_(err);
         }
@@ -165,7 +169,8 @@ exports.user_store_token_check = function(user_id, store_token, cb_) {
 
         /* We write back the sessions as we updated the `last_check` or */
         /* filtered outdated sessions.                                  */
-        return storage.put(user_id, 'sessions.json', sessions, cb_);
+        return storage.put(storage.prefix(user_id) + 'sessions.json', sessions, 
+                           cb_);
       });
     }
   ], function(err) {

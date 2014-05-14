@@ -6,6 +6,7 @@
  * @author: spolu
  *
  * @log:
+ * - 2014-05-13 spolu  `local_table/remote_table` API
  * - 2014-04-11 spolu  `in_memory` mode
  * - 2014-04-07 spolu  Introduce `session_token` / `store_token`
  * - 2014-04-04 spolu  Add `kill` method
@@ -21,17 +22,16 @@ var common = require('../../lib/common.js');
 
 // ## gig
 //
-// GiG.fs Client API is constructed with a `table_url` and a `session_token` to
-// access the table or the object `in_memory`.
+// GiG.fs client API is constructed with a remote_table object (`table_url` and
+// `session_token`) and a `local_table` object (store characteristics for each
+// channel handled locally).
 //
-// If `in_memory` is defined then the client will run entirely in memory and the
-// `in_memory_channels` array will be used to know which channels to expose. In 
-// `in_memory` mode, nothing is persisted and everything gets deleted upon
-// destruction of the `gig` object.
+// Local stores can be persistent if a `storage_path` is defined or in memory
+// otherwise.
 //
 // ```
-// @spec { table_url, session_token, 
-//         in_memory, in_memory_channels }
+// @spec { remote_table: { table_url, session_token },
+//         local_table: { channel: [ { storage_path } ] } }
 // ```
 var gig = function(spec, my) {
   my = my || {};
@@ -43,11 +43,30 @@ var gig = function(spec, my) {
     callbacks: []
   };
 
-  my.table_url = spec.table_url || 'INVALID_TABLE_URL';
-  my.session_token = spec.session_token || 'INVALID_TOKEN';
-
-  my.in_memory = spec.in_memory || false;
-  my.in_memory_channels = spec.in_memory_channels || [];
+  if(spec.remote_table) {
+    my.remote_table = {
+      table_url: spec.remote_table.table_url || 'INVALID_TABLE_URL',
+      session_token: spec.remote_table.session_token || 'INVALID_SESSION_TOKEN'
+    };
+  }
+  else {
+    my.remote_table = null;
+  }
+  if(spec.local_table) {
+    my.local_table = {};
+    Object.keys(spec.local_table).forEach(function(c) {
+      my.local_table[c] = [];
+      spec.local_table[c].forEach(function(s) {
+        my.local_table[c].push({
+          storage_path: s.storage_path || null,
+          in_memory: s.storage_path ? false : true
+        });
+      });
+    });
+  }
+  else {
+    my.local_table = null;
+  }
 
   my.table = null;
   my.registry = {};
@@ -203,19 +222,11 @@ var gig = function(spec, my) {
       return;
     }
 
-    if(my.in_memory) {
-      my.table = require('./table_in_memory.js').table_in_memory({
-        registry: my.registry,
-        channels: my.in_memory_channels
-      });
-    }
-    else {
-      my.table = require('./table_networked.js').table_networked({
-        registry: my.registry,
-        table_url: my.table_url,
-        session_token: my.session_token
-      });
-    }
+    my.table = require('./table.js').table({
+      local: my.local_table,
+      remote: my.remote_table,
+      registry: my.registry,
+    });
 
     async.series([
       my.table.init
@@ -238,7 +249,7 @@ var gig = function(spec, my) {
   kill = function(cb_) {
     if(my.table) {
       async.series([
-                   my.table.kill
+        my.table.kill
       ], cb_);
     }
     else {

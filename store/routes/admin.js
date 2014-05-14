@@ -6,6 +6,7 @@
  * @author:  spolu
  *
  * @log:
+ * - 2014-05-13 spolu  Storage `prefix` to make it more versatile
  * - 2014-02-28 spolu  Updated `code` format
  * - 2014-02-27 spolu  Creation
  */
@@ -29,11 +30,11 @@ var storage = require('../../lib/storage.js').storage({});
 // @cb_     {function(err), user}
 // ```
 exports.user_create = function(user_id, cb_) {
-  storage.get(user_id, 'user.json', function(err, json) {
+  storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
     if(err && err.code === 'ENOENT') {
       async.parallel({
         'user.json': function(cb_) {
-          return storage.put(user_id, 'user.json', {}, cb_);
+          return storage.put(storage.prefix(user_id) + 'user.json', {}, cb_);
         }
       }, function(err) {
         return cb_(err, {});
@@ -94,7 +95,7 @@ exports.get_code = function(req, res, next) {
 
   async.series([
     function(cb_) {
-      storage.get(user_id, 'user.json', function(err, json) {
+      storage.get(storage.prefix(user_id) + 'user.json', function(err, json) {
         user = json;
         return cb_(err);
       });
