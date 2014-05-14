@@ -1,6 +1,6 @@
 {
   "name": "gig.fs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "dependencies": {
     "express": "3.4.x",
     "async": "0.2.x",
@@ -12,6 +12,9 @@
   "bin": {
     "table": "./table/table.js",
     "store": "./store/store.js"
+  },
+  "scripts": {
+    "test": "nodeunit test/test_*"
   },
   "repository": "git://github.com/breach/gig.fs"
 }
