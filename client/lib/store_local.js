@@ -206,7 +206,7 @@ var store_local = function(spec, my) {
              (my.tuples[type][path].oplog[i].value &&
               my.tuples[type][path].oplog[i].date > op.date)) {
             noop = true;
-            common.log.out('NOOP: ' + op.sha);
+            common.log.debug('NOOP: ' + op.sha);
             return cb_();
           }
         }
@@ -223,8 +223,8 @@ var store_local = function(spec, my) {
           }
         }
         if(i > 0) {
-          common.log.out('PRUNING: ' + my.tuples[type][path].oplog[i].sha + 
-                         ' '  + i + ' / ' + my.tuples[type][path].oplog.length);
+          common.log.debug('PRUNING: ' + my.tuples[type][path].oplog[i].sha + 
+                           ' '  + i + ' / ' + my.tuples[type][path].oplog.length);
           my.tuples[type][path].oplog.splice(0, i);
         }
 

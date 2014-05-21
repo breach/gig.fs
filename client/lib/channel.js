@@ -80,14 +80,14 @@ var channel = function(spec, my) {
     if(my.killed)
       return;
 
-    common.log.out('SYNCPRUNE: ' + type + ' ' + path);
+    common.log.debug('SYNCPRUNE: ' + type + ' ' + path);
     var synced = false;
     var oplogs = {};
     var values = {};
     async.series([
       function(cb_) {
         /* SYNCING */
-        common.log.out('SYNC: ' + type + ' ' + path);
+        common.log.debug('SYNC: ' + type + ' ' + path);
         async.each(Object.keys(my.stores), function(s, cb_) {
           my.stores[s].get(type, path, function(err, value, oplog) {
             if(err) {
@@ -139,7 +139,7 @@ var channel = function(spec, my) {
         if(length <= 1) {
           return cb_();
         }
-        common.log.out('PRUNE: ' + type + ' ' + path);
+        common.log.debug('PRUNE: ' + type + ' ' + path);
         var value = null;
         var hv = '';
         Object.keys(values).forEach(function(s) {
@@ -159,7 +159,7 @@ var channel = function(spec, my) {
         }
         op.sha = common.hash([ op.date.toString(),
                                JSON.stringify(op.value) ]);
-        common.log.out('PUSHING: ' + op.sha);
+        common.log.debug('PUSHING: ' + op.sha);
         async.each(Object.keys(my.stores), function(s, cb_) {
           my.stores[s].push(type, path, op, cb_);
         }, cb_);
@@ -306,7 +306,7 @@ var channel = function(spec, my) {
         var hv = common.hash([JSON.stringify(value)]);
         if(my.state[htp] !== hv) {
            my.state[htp] = hv;
-          common.log.out('UPDATE: [' + type + '] ' + path + ' ' + hv);
+          common.log.debug('UPDATE: [' + type + '] ' + path + ' ' + hv);
           that.emit('update', type, path, value);
         }
         /* Syncpruning trigger. */
