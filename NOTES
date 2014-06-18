@@ -10,6 +10,7 @@ DONE:
 
 >>v0.2<<
 
+- write then rename to prevent corruption on crash
 - `local_table` support
 
 >>v0.1<<
